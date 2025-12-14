@@ -13,3 +13,8 @@ export const STATISTICS_LABEL = "Statistics";
 
 //firebase
 export const WORDS = "words";
+
+export const WORD_TYPE_OPTIONS = [
+  { name: "Words", code: "word" },
+  { name: "Irregular Verbs", code: "irregular" },
+];
