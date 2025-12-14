@@ -11,7 +11,10 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { LEVEL, WORD_TYPE_OPTIONS, WORDS } from "@/composables/constants";
+import { ProgressSpinner } from "primevue";
 import Select from "primevue/select";
+import Button from "primevue/button";
+import Checkbox from "primevue/checkbox";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import { ProgressSpinner } from "primevue";
@@ -148,7 +151,11 @@ onMounted(() => {
 <template>
   <div class="flex flex-col justify-center items-center">
     <div>
+      <<<<<<< HEAD
       <h1>Level {{ level?.level }}</h1>
+      =======
+      <h1>Level</h1>
+      >>>>>>> 035e9c4 (feat: add default functionalities)
       <div>
         <Select
           v-model="selectedWordType"
@@ -171,6 +178,7 @@ onMounted(() => {
       </div>
     </div>
     <div>
+      <<<<<<< HEAD
       <div
         v-if="loading && words.length === 0"
         class="flex items-center justify-center py-10"
@@ -183,6 +191,9 @@ onMounted(() => {
           aria-label="Loading Members"
         />
       </div>
+      =======
+      <div v-if="loading && words.length === 0">Loading...</div>
+      >>>>>>> 035e9c4 (feat: add default functionalities)
       <div v-else-if="words.length === 0">No words found</div>
       <div v-else>
         <div v-for="word in words" :key="word.id">
