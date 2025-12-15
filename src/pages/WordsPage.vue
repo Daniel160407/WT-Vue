@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from "vue";
-import type { Word } from "@/type/interfaces";
+import { type Level, type Word } from "@/type/interfaces";
 import { db } from "../../firebase";
 import {
   collection,
@@ -10,12 +10,14 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { WORD_TYPE_OPTIONS, WORDS } from "@/composables/constants";
+import { LEVEL, WORD_TYPE_OPTIONS, WORDS } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
+import { ProgressSpinner } from "primevue";
 
 const words = ref<Word[]>([]);
+const level = ref<Level>();
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>();
 const expandedWordId = ref<string | null>(null);
@@ -76,6 +78,30 @@ const dropWords = async () => {
   }
 };
 
+const fetchLevel = async () => {
+  loading.value = true;
+
+  try {
+    const snapshot = await getDocs(collection(db, LEVEL));
+
+    if (snapshot.empty) {
+      level.value = undefined;
+      return;
+    }
+
+    const docSnap = snapshot.docs[0];
+
+    level.value = {
+      id: docSnap!.id,
+      ...(docSnap!.data() as Omit<Level, "id">),
+    };
+  } catch (error) {
+    console.error("Failed to fetch level:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 const fetchWords = async (wordType: string) => {
   loading.value = true;
   try {
@@ -115,13 +141,14 @@ onMounted(() => {
   if (WORD_TYPE_OPTIONS.length > 0) {
     selectedWordType.value = WORD_TYPE_OPTIONS[0];
   }
+  fetchLevel();
 });
 </script>
 
 <template>
   <div class="flex flex-col justify-center items-center">
     <div>
-      <h1>Level</h1>
+      <h1>Level {{ level?.level }}</h1>
       <div>
         <Select
           v-model="selectedWordType"
@@ -144,7 +171,18 @@ onMounted(() => {
       </div>
     </div>
     <div>
-      <div v-if="loading && words.length === 0">Loading...</div>
+      <div
+        v-if="loading && words.length === 0"
+        class="flex items-center justify-center py-10"
+      >
+        <ProgressSpinner
+          style="width: 60px; height: 60px"
+          strokeWidth="3"
+          fill="transparent"
+          animationDuration=".5s"
+          aria-label="Loading Members"
+        />
+      </div>
       <div v-else-if="words.length === 0">No words found</div>
       <div v-else>
         <div v-for="word in words" :key="word.id">

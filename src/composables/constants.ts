@@ -13,6 +13,7 @@ export const STATISTICS_LABEL = "Statistics";
 
 //firebase
 export const WORDS = "words";
+export const LEVEL = "level";
 
 export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },

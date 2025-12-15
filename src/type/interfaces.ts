@@ -8,3 +8,10 @@ export interface Word {
   user_id: number;
   language_id: number;
 }
+
+export interface Level {
+  id: string;
+  level: number;
+  user_id: number;
+  language_id: number;
+}
