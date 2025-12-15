@@ -25,3 +25,10 @@ export interface AppUser {
   createdAt: Date;
   lastLoginAt?: Date;
 }
+
+export interface Level {
+  id: string;
+  level: number;
+  user_id: number;
+  language_id: number;
+}

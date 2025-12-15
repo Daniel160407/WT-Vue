@@ -24,6 +24,7 @@ export const WORD_TYPE_OPTIONS = [
   { name: "Irregular Verbs", code: "irregular" },
 ];
 export const USERS = "users";
+export const LEVEL = "level";
 
 export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },
