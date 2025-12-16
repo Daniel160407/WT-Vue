@@ -146,10 +146,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-center items-center">
-    <div>
-      <h1>Level {{ level?.level }}</h1>
-      <div>
+  <div class="flex flex-col justify-start items-center min-h-screen p-6">
+    <div class="mt-10 max-w-3xl w-full p-6 bg-[#333333] rounded-2xl shadow-lg">
+      <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
+        Level {{ level?.level }}
+      </h1>
+
+      <div
+        class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6"
+      >
         <Select
           v-model="selectedWordType"
           :options="WORD_TYPE_OPTIONS"
@@ -159,64 +164,89 @@ onMounted(() => {
           :highlightOnSelect="false"
           class="w-full md:w-56"
         />
-        <div>
+        <div class="flex items-center gap-2 text-white">
           <Checkbox
             v-model="allWordsChecked"
             binary
             :disabled="words.length === 0"
             @update:modelValue="handleSelectAllChange"
+            class="text-yellow-400"
           />
-          <span>Select All</span>
+          <span class="text-sm font-medium">Select All</span>
         </div>
       </div>
-    </div>
-    <div>
-      <div
-        v-if="loading && words.length === 0"
-        class="flex items-center justify-center py-10"
-      >
-        <ProgressSpinner
-          style="width: 60px; height: 60px"
-          strokeWidth="3"
-          fill="transparent"
-          animationDuration=".5s"
-          aria-label="Loading Members"
-        />
-      </div>
-      <div v-else-if="words.length === 0">No words found</div>
-      <div v-else>
-        <div v-for="word in words" :key="word.id">
-          <div>
-            <p>{{ word.word }} - {{ word.meaning }}</p>
-            <div>
-              <Button
-                icon="pi pi-lightbulb"
-                severity="warn"
-                variant="text"
-                rounded
-                @click="toggleWordExamples(word.id)"
-              />
+
+      <div>
+        <div
+          v-if="loading && words.length === 0"
+          class="flex items-center justify-center py-10"
+        >
+          <ProgressSpinner
+            style="width: 60px; height: 60px"
+            strokeWidth="3"
+            fill="transparent"
+            animationDuration=".5s"
+            aria-label="Loading Members"
+          />
+        </div>
+
+        <div
+          v-else-if="words.length === 0"
+          class="text-center text-gray-400 py-6"
+        >
+          No words found
+        </div>
+
+        <div v-else class="flex flex-col gap-4">
+          <div
+            v-for="word in words"
+            :key="word.id"
+            class="bg-[#444444] rounded-xl p-4 border border-gray-500 flex justify-center md:flex-row md:items-center gap-3 hover:bg-[#555] transition-colors duration-300"
+          >
+            <div class="flex flex-col justify-center items-center w-full">
+              <p class="text-[40px]">
+                {{ word.word }} -
+                <span>{{ word.meaning }}</span>
+              </p>
+              <div
+                v-if="expandedWordId === word.id && word.example"
+                class="mt-2 text-gray-300 p-4 bg-[#18181b] rounded-[10px] w-full"
+              >
+                <p class="text-[#ffc107] text-lg">Example usages:</p>
+                <p>
+                  {{ word.example }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-col items-center gap-2 mt-2 md:mt-0">
               <Checkbox
                 binary
                 variant="filled"
                 :modelValue="checkedWordIds.has(word.id)"
                 @update:modelValue="(isChecked: boolean) => toggleWordCheck(word.id, isChecked)"
               />
+              <Button
+                icon="pi pi-lightbulb"
+                severity="warn"
+                variant="text"
+                rounded
+                @click="toggleWordExamples(word.id)"
+                class="hover:text-[#ffc107] !text-[#ffc107]"
+              />
             </div>
           </div>
-          <div v-if="expandedWordId === word.id && word.example">
-            <p>{{ word.example }}</p>
-          </div>
         </div>
-      </div>
-      <div>
-        <Button
-          label="Drop"
-          :disabled="!hasCheckedWords"
-          :loading="loading"
-          @click="dropWords"
-        />
-        <span v-if="hasCheckedWords"> ({{ selectedWordCount }} selected) </span>
+
+        <div class="mt-6">
+          <Button
+            label="Drop"
+            :loading="loading"
+            severity="warn"
+            class="!bg-[#ffc107] !border-[#ffc107] !text-black w-full !text-xl"
+            @click="dropWords"
+          />
+        </div>
       </div>
     </div>
   </div>
