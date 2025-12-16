@@ -16,6 +16,7 @@ import {
 import { USERS, WORDS_ROUTE } from "./constants";
 import router from "./router";
 import type { AppUser } from "@/type/interfaces";
+import Cookies from "js-cookie";
 
 const user = ref<FirebaseUser | null>(null);
 const loading = ref<boolean>(true);
@@ -57,6 +58,9 @@ export function useAuth() {
         merge: true,
       });
 
+      Cookies.set("uid", firebaseUser.uid);
+      Cookies.set("name", firebaseUser.displayName!);
+      Cookies.set("photoURL", firebaseUser.photoURL!);
       router.push(WORDS_ROUTE);
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Unknown error";

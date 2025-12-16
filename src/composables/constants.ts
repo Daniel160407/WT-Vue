@@ -18,13 +18,7 @@ export const AUTH_ROUTE = "/auth";
 //firebase
 export const WORDS = "words";
 export const LEVEL = "level";
-
-export const WORD_TYPE_OPTIONS = [
-  { name: "Words", code: "word" },
-  { name: "Irregular Verbs", code: "irregular" },
-];
 export const USERS = "users";
-export const LEVEL = "level";
 
 export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },
