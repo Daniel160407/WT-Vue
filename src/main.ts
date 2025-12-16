@@ -7,6 +7,7 @@ import "primeicons/primeicons.css";
 import { ToastService } from "primevue";
 import { createPinia } from "pinia";
 import Noir from "./presets/Noir";
+import router from "./composables/router";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -24,5 +25,6 @@ app.use(PrimeVue, {
 app.use(pinia);
 app.use(ConfirmationService);
 app.use(ToastService);
+app.use(router);
 
 app.mount("#app");

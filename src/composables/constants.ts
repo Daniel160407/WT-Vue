@@ -11,5 +11,10 @@ export const TESTS_LABEL = "Tests";
 export const DICTIONARY_LABEL = "Dictionary";
 export const STATISTICS_LABEL = "Statistics";
 
+//router
+export const WORDS_ROUTE = "/words";
+export const AUTH_ROUTE = "/auth";
+
 //firebase
 export const WORDS = "words";
+export const USERS = "users";
