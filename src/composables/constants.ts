@@ -24,3 +24,8 @@ export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },
   { name: "Irregular Verbs", code: "irregular" },
 ];
+
+//cookies
+export const UID = "uid";
+export const NAME = "name";
+export const PHOTO_URL = "photoURL";

@@ -15,6 +15,9 @@ import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import { ProgressSpinner } from "primevue";
+import { useAuth } from "@/composables/useAuth";
+
+const { uid, loading: authLoading } = useAuth();
 
 const words = ref<Word[]>([]);
 const level = ref<Level>();
@@ -24,12 +27,22 @@ const expandedWordId = ref<string | null>(null);
 const checkedWordIds = ref<Set<string>>(new Set());
 
 const selectedWordTypeCode = computed(() => selectedWordType.value?.code);
-const allWordsChecked = computed(() => {
-  if (words.value.length === 0) return false;
-  return checkedWordIds.value.size === words.value.length;
+
+const allWordsChecked = computed({
+  get: () => {
+    if (words.value.length === 0) return false;
+    return checkedWordIds.value.size === words.value.length;
+  },
+  set: (value: boolean) => {
+    if (value) {
+      words.value.forEach((w) => checkedWordIds.value.add(w.id));
+    } else {
+      checkedWordIds.value.clear();
+    }
+  },
 });
+
 const hasCheckedWords = computed(() => checkedWordIds.value.size > 0);
-const selectedWordCount = computed(() => checkedWordIds.value.size);
 
 const toggleWordExamples = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
@@ -43,11 +56,135 @@ const toggleWordCheck = (wordId: string, checked: boolean) => {
   }
 };
 
-const handleSelectAllChange = (value: boolean) => {
-  if (value) {
-    words.value.forEach((word) => checkedWordIds.value.add(word.id));
-  } else {
-    checkedWordIds.value.clear();
+const resetLevelAndDeleteWords = async () => {
+  if (!uid.value) return;
+
+  const batch = writeBatch(db);
+
+  const levelSnapshot = await getDocs(collection(db, LEVEL));
+  levelSnapshot.docs.forEach((docSnap) => {
+    batch.update(doc(db, LEVEL, docSnap.id), { level: 1 });
+  });
+
+  const wordsSnapshot = await getDocs(
+    query(
+      collection(db, WORDS),
+      where("word_type", "==", "word"),
+      where("user_id", "==", uid.value)
+    )
+  );
+
+  wordsSnapshot.docs.forEach((docSnap) => {
+    batch.delete(doc(db, WORDS, docSnap.id));
+  });
+
+  await batch.commit();
+  words.value = [];
+};
+
+const fetchLevel = async () => {
+  loading.value = true;
+  try {
+    const snapshot = await getDocs(collection(db, LEVEL));
+
+    if (snapshot.empty) {
+      level.value = undefined;
+      return;
+    }
+
+    const docSnap = snapshot.docs[0];
+    const currentLevel = docSnap!.data().level ?? 1;
+
+    if (currentLevel > 5) {
+      await resetLevelAndDeleteWords();
+      await fetchLevel();
+      return;
+    }
+
+    level.value = {
+      id: docSnap!.id,
+      ...(docSnap!.data() as Omit<Level, "id">),
+    };
+  } catch (err) {
+    console.error("Failed to fetch level:", err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchWords = async (wordType: string) => {
+  if (authLoading.value || !uid.value) return;
+
+  loading.value = true;
+
+  try {
+    const wordsRef = collection(db, WORDS);
+
+    const fetchActive = () =>
+      getDocs(
+        query(
+          wordsRef,
+          where("word_type", "==", wordType),
+          where("active", "==", true),
+          where("user_id", "==", uid.value)
+        )
+      );
+
+    let snapshot = await fetchActive();
+
+    if (!snapshot.empty) {
+      words.value = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Word, "id">),
+      }));
+      expandedWordId.value = null;
+      await fetchLevel();
+      return;
+    }
+
+    const inactiveSnapshot = await getDocs(
+      query(
+        wordsRef,
+        where("word_type", "==", wordType),
+        where("active", "==", false),
+        where("user_id", "==", uid.value)
+      )
+    );
+
+    if (inactiveSnapshot.empty) {
+      words.value = [];
+      await fetchLevel();
+      return;
+    }
+
+    const batch = writeBatch(db);
+
+    inactiveSnapshot.docs.forEach((d) => {
+      batch.update(doc(db, WORDS, d.id), { active: true });
+    });
+
+    const levelSnapshot = await getDocs(collection(db, LEVEL));
+    levelSnapshot.docs.forEach((d) => {
+      batch.update(doc(db, LEVEL, d.id), {
+        level: (d.data().level ?? 0) + 1,
+      });
+    });
+
+    await batch.commit();
+
+    snapshot = await fetchActive();
+    words.value = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<Word, "id">),
+    }));
+
+    expandedWordId.value = null;
+    await fetchLevel();
+  } catch (err) {
+    console.error("Error fetching words:", err);
+    words.value = [];
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -58,95 +195,37 @@ const dropWords = async () => {
   try {
     const batch = writeBatch(db);
 
-    checkedWordIds.value.forEach((wordId) => {
-      const wordRef = doc(db, WORDS, wordId);
-      batch.update(wordRef, { active: false });
+    checkedWordIds.value.forEach((id) => {
+      batch.update(doc(db, WORDS, id), { active: false });
     });
 
     await batch.commit();
-
     checkedWordIds.value.clear();
 
     if (selectedWordTypeCode.value) {
       await fetchWords(selectedWordTypeCode.value);
     }
   } catch (err) {
-    console.error("Error deactivating words:", err);
-    throw new Error("Failed to deactivate words");
+    console.error("Drop failed:", err);
   } finally {
     loading.value = false;
   }
 };
 
-const fetchLevel = async () => {
-  loading.value = true;
-
-  try {
-    const snapshot = await getDocs(collection(db, LEVEL));
-
-    if (snapshot.empty) {
-      level.value = undefined;
-      return;
-    }
-
-    const docSnap = snapshot.docs[0];
-
-    level.value = {
-      id: docSnap!.id,
-      ...(docSnap!.data() as Omit<Level, "id">),
-    };
-  } catch (error) {
-    console.error("Failed to fetch level:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const fetchWords = async (wordType: string) => {
-  loading.value = true;
-  try {
-    const wordsRef = collection(db, WORDS);
-    const wordsQuery = query(
-      wordsRef,
-      where("word_type", "==", wordType),
-      where("active", "==", true)
-    );
-
-    const wordsSnapshot = await getDocs(wordsQuery);
-    words.value = wordsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Word[];
-
-    expandedWordId.value = null;
-  } catch (err) {
-    console.error("Error fetching words:", err);
-    throw new Error("Failed to load words");
-  } finally {
-    loading.value = false;
-  }
-};
-
-watch(selectedWordTypeCode, (newType) => {
-  if (newType) {
-    fetchWords(newType);
-  }
+watch([selectedWordTypeCode, uid], ([type, user]) => {
+  if (type && user) fetchWords(type);
 });
 
-watch(words, () => {
-  checkedWordIds.value.clear();
-});
+watch(words, () => checkedWordIds.value.clear());
 
 onMounted(() => {
-  if (WORD_TYPE_OPTIONS.length > 0) {
-    selectedWordType.value = WORD_TYPE_OPTIONS[0];
-  }
+  selectedWordType.value = WORD_TYPE_OPTIONS[0];
   fetchLevel();
 });
 </script>
 
 <template>
-  <div class="flex flex-col justify-start items-center min-h-screen p-6">
+  <div class="flex flex-col justify-start items-center min-h-screen w-full p-6">
     <div class="mt-10 max-w-3xl w-full p-6 bg-[#333333] rounded-2xl shadow-lg">
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Level {{ level?.level }}

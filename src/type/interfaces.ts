@@ -5,15 +5,15 @@ export interface Word {
   example: string;
   word_type: string;
   active: boolean;
-  user_id: number;
-  language_id: number;
+  user_id: string;
+  language_id: string;
 }
 
 export interface Level {
   id: string;
   level: number;
-  user_id: number;
-  language_id: number;
+  user_id: string;
+  language_id: string;
 }
 
 export interface AppUser {
@@ -29,6 +29,6 @@ export interface AppUser {
 export interface Level {
   id: string;
   level: number;
-  user_id: number;
-  language_id: number;
+  user_id: string;
+  language_id: string;
 }
