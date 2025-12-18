@@ -17,4 +17,15 @@ export const AUTH_ROUTE = "/auth";
 
 //firebase
 export const WORDS = "words";
+export const LEVEL = "level";
 export const USERS = "users";
+
+export const WORD_TYPE_OPTIONS = [
+  { name: "Words", code: "word" },
+  { name: "Irregular Verbs", code: "irregular" },
+];
+
+//cookies
+export const UID = "uid";
+export const NAME = "name";
+export const PHOTO_URL = "photoURL";
