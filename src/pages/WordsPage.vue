@@ -112,44 +112,45 @@ const fetchLevel = async () => {
   }
 };
 
+const mapWords = (snapshot: any): Word[] =>
+  snapshot.docs.map((d: any) => ({
+    id: d.id,
+    ...(d.data() as Omit<Word, "id">),
+  }));
+
+const getWordsQuery = (wordType: string, active: boolean) =>
+  query(
+    collection(db, WORDS),
+    where("word_type", "==", wordType),
+    where("active", "==", active),
+    where("user_id", "==", uid.value)
+  );
+
+const incrementLevelBatch = async (batch: ReturnType<typeof writeBatch>) => {
+  const levelSnapshot = await getDocs(collection(db, LEVEL));
+  levelSnapshot.docs.forEach((d) => {
+    batch.update(doc(db, LEVEL, d.id), {
+      level: (d.data().level ?? 0) + 1,
+    });
+  });
+};
+
 const fetchWords = async (wordType: string) => {
   if (authLoading.value || !uid.value) return;
 
   loading.value = true;
 
   try {
-    const wordsRef = collection(db, WORDS);
+    const activeSnapshot = await getDocs(getWordsQuery(wordType, true));
 
-    const fetchActive = () =>
-      getDocs(
-        query(
-          wordsRef,
-          where("word_type", "==", wordType),
-          where("active", "==", true),
-          where("user_id", "==", uid.value)
-        )
-      );
-
-    let snapshot = await fetchActive();
-
-    if (!snapshot.empty) {
-      words.value = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<Word, "id">),
-      }));
+    if (!activeSnapshot.empty) {
+      words.value = mapWords(activeSnapshot);
       expandedWordId.value = null;
       await fetchLevel();
       return;
     }
 
-    const inactiveSnapshot = await getDocs(
-      query(
-        wordsRef,
-        where("word_type", "==", wordType),
-        where("active", "==", false),
-        where("user_id", "==", uid.value)
-      )
-    );
+    const inactiveSnapshot = await getDocs(getWordsQuery(wordType, false));
 
     if (inactiveSnapshot.empty) {
       words.value = [];
@@ -163,22 +164,14 @@ const fetchWords = async (wordType: string) => {
       batch.update(doc(db, WORDS, d.id), { active: true });
     });
 
-    const levelSnapshot = await getDocs(collection(db, LEVEL));
-    levelSnapshot.docs.forEach((d) => {
-      batch.update(doc(db, LEVEL, d.id), {
-        level: (d.data().level ?? 0) + 1,
-      });
-    });
-
+    await incrementLevelBatch(batch);
     await batch.commit();
 
-    snapshot = await fetchActive();
-    words.value = snapshot.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as Omit<Word, "id">),
-    }));
+    const refreshedSnapshot = await getDocs(getWordsQuery(wordType, true));
 
+    words.value = mapWords(refreshedSnapshot);
     expandedWordId.value = null;
+
     await fetchLevel();
   } catch (err) {
     console.error("Error fetching words:", err);
@@ -248,7 +241,6 @@ onMounted(() => {
             v-model="allWordsChecked"
             binary
             :disabled="words.length === 0"
-            @update:modelValue="handleSelectAllChange"
             class="text-yellow-400"
           />
           <span class="text-sm font-medium">Select All</span>
@@ -267,13 +259,6 @@ onMounted(() => {
             animationDuration=".5s"
             aria-label="Loading Members"
           />
-        </div>
-
-        <div
-          v-else-if="words.length === 0"
-          class="text-center text-gray-400 py-6"
-        >
-          No words found
         </div>
 
         <div v-else class="flex flex-col gap-4">
