@@ -2,7 +2,13 @@
 import { Menubar } from "primevue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { HOME_LABEL } from "./composables/constants";
+import {
+  ADD_WORDS_LABEL,
+  ADD_WORDS_ROUTE,
+  AUTH_ROUTE,
+  HOME_LABEL,
+  WORDS_ROUTE,
+} from "./composables/constants";
 
 const router = useRouter();
 
@@ -10,12 +16,17 @@ const items = ref([
   {
     label: HOME_LABEL,
     icon: "pi pi-home",
-    command: () => router.push("/words"),
+    command: () => router.push(WORDS_ROUTE),
+  },
+  {
+    label: ADD_WORDS_LABEL,
+    icon: "pi pi-pencil",
+    command: () => router.push(ADD_WORDS_ROUTE),
   },
   {
     label: "Auth",
     icon: "pi pi-chart-bar",
-    command: () => router.push("/auth"),
+    command: () => router.push(AUTH_ROUTE),
   },
 ]);
 </script>

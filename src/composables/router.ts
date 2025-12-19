@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import WordsPage from "@/pages/WordsPage.vue";
 import AuthPage from "@/pages/AuthPage.vue";
-import { AUTH_ROUTE, WORDS_ROUTE } from "./constants";
+import { ADD_WORDS_ROUTE, AUTH_ROUTE, WORDS_ROUTE } from "./constants";
+import AddWordsPage from "@/pages/AddWordsPage.vue";
 
 const routes = [
   { path: WORDS_ROUTE, component: WordsPage },
+  { path: ADD_WORDS_ROUTE, component: AddWordsPage },
   { path: AUTH_ROUTE, component: AuthPage },
 ];
 
