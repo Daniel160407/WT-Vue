@@ -9,6 +9,8 @@ import type { DictionaryWord } from "@/type/interfaces";
 
 const searchQuery = ref("");
 const words = ref<DictionaryWord[]>([]);
+const expandedWordId = ref<string | null>(null);
+
 const { uid } = useAuth();
 
 const fetchWords = async () => {
@@ -36,23 +38,25 @@ onMounted(() => {
   if (uid.value) fetchWords();
 });
 
+const toggleExample = (wordId: string) => {
+  expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
+};
+
 const groupedWords = computed(() => {
-  const filtered = words.value.filter((word) => {
-    const q = searchQuery.value.toLowerCase();
-    return (
+  const q = searchQuery.value.toLowerCase();
+
+  const filtered = words.value.filter(
+    (word) =>
       word.word.toLowerCase().includes(q) ||
       word.meaning.toLowerCase().includes(q)
-    );
-  });
+  );
 
   const sorted = [...filtered].sort((a, b) => a.word.localeCompare(b.word));
 
   return sorted.reduce<Record<string, DictionaryWord[]>>((acc, word) => {
     const letter = word.word.charAt(0).toUpperCase();
-
     if (!acc[letter]) acc[letter] = [];
     acc[letter].push(word);
-
     return acc;
   }, {});
 });
@@ -78,11 +82,9 @@ const groupedWords = computed(() => {
         </p>
       </div>
 
-      <div class="flex flex-col gap-4 mt-3">
+      <div class="flex flex-col gap-6 mt-4">
         <div v-for="(group, letter) in groupedWords" :key="letter">
-          <h2
-            class="text-[#ffc107] text-2xl font-bold mb-3 pb-1"
-          >
+          <h2 class="text-[#ffc107] text-2xl font-bold mb-3">
             {{ letter }}
           </h2>
 
@@ -90,7 +92,8 @@ const groupedWords = computed(() => {
             <div
               v-for="word in group"
               :key="word.id"
-              class="bg-[#444444] rounded-xl p-4 border border-gray-500 hover:bg-[#555] transition-colors duration-300"
+              class="bg-[#444444] rounded-xl p-4 border border-gray-500 hover:bg-[#555] transition-colors duration-300 cursor-pointer"
+              @dblclick="toggleExample(word.id)"
             >
               <div class="flex justify-between items-center">
                 <p class="text-[24px] text-white font-semibold">
@@ -103,6 +106,16 @@ const groupedWords = computed(() => {
                 >
                   {{ word.level }}
                 </span>
+              </div>
+
+              <div
+                v-if="expandedWordId === word.id && word.example"
+                class="mt-3 p-4 bg-[#18181b] rounded-xl text-gray-300 border border-gray-600"
+              >
+                <p class="text-[#ffc107] font-semibold mb-1">Example</p>
+                <p class="whitespace-pre-line">
+                  {{ word.example }}
+                </p>
               </div>
             </div>
           </div>
