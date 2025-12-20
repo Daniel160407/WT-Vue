@@ -52,7 +52,6 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
 
 watch(selectedWordType, (v) => (formData.value.word_type = v.code));
 watch(selectedLevel, (v) => (formData.value.level = v.code));
-
 </script>
 <template>
   <div class="flex justify-center items-center mt-10">

@@ -14,12 +14,14 @@ export const STATISTICS_LABEL = "Statistics";
 //router
 export const WORDS_ROUTE = "/words";
 export const ADD_WORDS_ROUTE = "/add";
+export const DICTIONARY_ROUTE = "/dictionary";
 export const AUTH_ROUTE = "/auth";
 
 //firebase
 export const WORDS = "words";
 export const LEVEL = "level";
 export const USERS = "users";
+export const DICTIONARY = "dictionary";
 
 //dropdowns
 export const WORD_TYPE_OPTIONS = [
