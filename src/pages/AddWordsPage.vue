@@ -10,6 +10,7 @@ import {
   Textarea,
 } from "primevue";
 import {
+  DICTIONARY,
   WORD_LEVEL_OPTIONS,
   WORD_TYPE_OPTIONS,
   WORDS,
@@ -48,6 +49,15 @@ const resolver = ({ values }: { values: any }) => {
 const onFormSubmit = async ({ valid }: { valid: boolean }) => {
   if (!valid) return;
   await addDoc(collection(db, WORDS), formData.value);
+  const dictionaryWord = {
+    word: formData.value.word,
+    meaning: formData.value.meaning,
+    example: formData.value.example,
+    level: formData.value.level,
+    user_id: formData.value.user_id,
+    language_id: formData.value.language_id,
+  };
+  await addDoc(collection(db, DICTIONARY), dictionaryWord);
 };
 
 watch(selectedWordType, (v) => (formData.value.word_type = v.code));

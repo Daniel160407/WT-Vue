@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { FloatLabel, InputText } from "primevue";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { db } from "../../firebase";
 import { DICTIONARY } from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
@@ -9,7 +9,6 @@ import type { DictionaryWord } from "@/type/interfaces";
 
 const searchQuery = ref("");
 const words = ref<DictionaryWord[]>([]);
-
 const { uid } = useAuth();
 
 const fetchWords = async () => {
@@ -30,30 +29,85 @@ const fetchWords = async () => {
 };
 
 watch(uid, (newUid) => {
-  if (newUid) {
-    fetchWords();
-  }
+  if (newUid) fetchWords();
 });
 
 onMounted(() => {
-  if (uid.value) {
-    fetchWords();
-  }
+  if (uid.value) fetchWords();
+});
+
+const groupedWords = computed(() => {
+  const filtered = words.value.filter((word) => {
+    const q = searchQuery.value.toLowerCase();
+    return (
+      word.word.toLowerCase().includes(q) ||
+      word.meaning.toLowerCase().includes(q)
+    );
+  });
+
+  const sorted = [...filtered].sort((a, b) => a.word.localeCompare(b.word));
+
+  return sorted.reduce<Record<string, DictionaryWord[]>>((acc, word) => {
+    const letter = word.word.charAt(0).toUpperCase();
+
+    if (!acc[letter]) acc[letter] = [];
+    acc[letter].push(word);
+
+    return acc;
+  }, {});
 });
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <FloatLabel variant="on">
-      <InputText v-model="searchQuery" class="w-full" />
-      <label>Search by word or meaning...</label>
-    </FloatLabel>
+  <div class="flex flex-col justify-start items-center min-h-screen w-full p-6">
+    <div class="mt-10 max-w-3xl w-full p-6 bg-[#333333] rounded-2xl shadow-lg">
+      <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
+        Dictionary
+      </h1>
 
-    <p class="text-sm text-gray-400">Total words: {{ words.length }}</p>
+      <div class="mb-4">
+        <FloatLabel variant="on">
+          <InputText
+            v-model="searchQuery"
+            class="w-full bg-[#444444] text-white border-gray-600"
+          />
+          <label>Search by word or meaning...</label>
+        </FloatLabel>
+        <p class="text-sm text-gray-400 mt-2">
+          Total words: {{ words.length }}
+        </p>
+      </div>
 
-    <div v-for="word in words" :key="word.id">
-      <p>{{ word.word }} – {{ word.meaning }}</p>
-      <p>{{ word.level }}</p>
+      <div class="flex flex-col gap-4 mt-3">
+        <div v-for="(group, letter) in groupedWords" :key="letter">
+          <h2
+            class="text-[#ffc107] text-2xl font-bold mb-3 pb-1"
+          >
+            {{ letter }}
+          </h2>
+
+          <div class="flex flex-col gap-4">
+            <div
+              v-for="word in group"
+              :key="word.id"
+              class="bg-[#444444] rounded-xl p-4 border border-gray-500 hover:bg-[#555] transition-colors duration-300"
+            >
+              <div class="flex justify-between items-center">
+                <p class="text-[24px] text-white font-semibold">
+                  {{ word.word }}
+                  <span class="text-gray-300">– {{ word.meaning }}</span>
+                </p>
+
+                <span
+                  class="px-3 py-1 text-sm rounded-full bg-[#18181b] text-[#ffc107]"
+                >
+                  {{ word.level }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
