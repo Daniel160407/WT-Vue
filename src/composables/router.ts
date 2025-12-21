@@ -1,12 +1,19 @@
 import { createRouter, createWebHistory } from "vue-router";
 import WordsPage from "@/pages/WordsPage.vue";
 import AuthPage from "@/pages/AuthPage.vue";
-import { ADD_WORDS_ROUTE, AUTH_ROUTE, WORDS_ROUTE } from "./constants";
+import {
+  ADD_WORDS_ROUTE,
+  AUTH_ROUTE,
+  DICTIONARY_ROUTE,
+  WORDS_ROUTE,
+} from "./constants";
 import AddWordsPage from "@/pages/AddWordsPage.vue";
+import DictionaryPage from "@/pages/DictionaryPage.vue";
 
 const routes = [
   { path: WORDS_ROUTE, component: WordsPage },
   { path: ADD_WORDS_ROUTE, component: AddWordsPage },
+  { path: DICTIONARY_ROUTE, component: DictionaryPage },
   { path: AUTH_ROUTE, component: AuthPage },
 ];
 

@@ -6,6 +6,8 @@ import {
   ADD_WORDS_LABEL,
   ADD_WORDS_ROUTE,
   AUTH_ROUTE,
+  DICTIONARY_LABEL,
+  DICTIONARY_ROUTE,
   HOME_LABEL,
   WORDS_ROUTE,
 } from "./composables/constants";
@@ -22,6 +24,11 @@ const items = ref([
     label: ADD_WORDS_LABEL,
     icon: "pi pi-pencil",
     command: () => router.push(ADD_WORDS_ROUTE),
+  },
+  {
+    label: DICTIONARY_LABEL,
+    icon: "pi pi-book",
+    command: () => router.push(DICTIONARY_ROUTE),
   },
   {
     label: "Auth",
