@@ -70,7 +70,7 @@ const groupedWords = computed(() => {
       </h1>
 
       <div class="mb-4">
-        <FloatLabel variant="on">
+        <FloatLabel variant="in">
           <InputText
             v-model="searchQuery"
             class="w-full bg-[#444444] text-white border-gray-600"
@@ -78,7 +78,7 @@ const groupedWords = computed(() => {
           <label>Search by word or meaning...</label>
         </FloatLabel>
         <p class="text-sm text-gray-400 mt-2">
-          Total words: {{ words.length }}
+          Total words in dictionary: {{ words.length }}
         </p>
       </div>
 
