@@ -43,6 +43,11 @@ export interface DictionaryWord {
   language_id: string;
 }
 
+export interface MessageObj {
+  payload: string;
+  sender: string;
+}
+
 export type WordCategory =
   | "word"
   | "dropped"

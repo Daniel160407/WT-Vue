@@ -80,3 +80,7 @@ export const CAPITALS = [
 export const UID = "uid";
 export const NAME = "name";
 export const PHOTO_URL = "photoURL";
+
+//AI
+export const GEMINI = "gemini";
+export const USER = "user";
