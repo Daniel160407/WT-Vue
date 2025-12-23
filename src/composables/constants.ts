@@ -8,12 +8,16 @@ export const STATISTICS_PAGE = "statistics";
 export const HOME_LABEL = "Words";
 export const ADD_WORDS_LABEL = "Add Words";
 export const TESTS_LABEL = "Tests";
+export const TRANSLATIONS = "Translations";
+export const AI = "AI";
 export const DICTIONARY_LABEL = "Dictionary";
 export const STATISTICS_LABEL = "Statistics";
 
 //router
 export const WORDS_ROUTE = "/words";
 export const ADD_WORDS_ROUTE = "/add";
+export const TRANSLATIONS_ROUTE = "/translations";
+export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
 export const AUTH_ROUTE = "/auth";
 
@@ -35,6 +39,13 @@ export const WORD_LEVEL_OPTIONS = [
   { name: "B2", code: "B2" },
   { name: "C1", code: "C1" },
   { name: "C2", code: "C2" },
+];
+export const WORD_CATEGORIES = [
+  { name: "All", code: "all" },
+  { name: "Words", code: "word" },
+  { name: "Irregular verbs", code: "irregular" },
+  { name: "Dropped words", code: "dropped" },
+  { name: "Dictionary", code: "dictionary" },
 ];
 
 //cookies
