@@ -9,7 +9,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAqOjRtfHdGNk5P3jjcxQA8QJCqOlGgJPQ",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "wordsteacher-fb214.firebaseapp.com",
   projectId: "wordsteacher-fb214",
   storageBucket: "wordsteacher-fb214.firebasestorage.app",
