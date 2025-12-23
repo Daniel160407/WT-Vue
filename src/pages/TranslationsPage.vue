@@ -1,44 +1,38 @@
 <script setup lang="ts">
-import { WORD_CATEGORIES, WORDS } from "@/composables/constants";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  CAPITALS,
+  DICTIONARY,
+  WORD_CATEGORIES,
+  WORDS,
+} from "@/composables/constants";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  type Query,
+} from "firebase/firestore";
 import { Button, FloatLabel, InputText, Select } from "primevue";
 import { ref, watch } from "vue";
 import { db } from "../../firebase";
 import { useAuth } from "@/composables/useAuth";
-import type { Word } from "@/type/interfaces";
+import type { DictionaryWord, Language, Word, WordCategory } from "@/type/interfaces";
+
 
 const { uid } = useAuth();
 
-const selectedLanguage = ref<"GEO" | "DEU">("DEU");
-const wordCategory = ref("word");
+const selectedLanguage = ref<Language>("DEU");
+const wordCategory = ref<{ name: string; code: WordCategory }>({
+  name: "Words",
+  code: "word",
+});
 
-const words = ref<Word[]>([]);
+const words = ref<Array<Word | DictionaryWord>>([]);
 const translations = ref<Record<string, string>>({});
 const results = ref<Record<string, boolean>>({});
 
-const fetchWords = async (category = "word") => {
-  if (!uid.value) return;
-
-  try {
-    const wordsQuery = query(
-      collection(db, WORDS),
-      where("word_type", "==", "word"),
-      where("active", "==", category === "word"),
-      where("user_id", "==", uid.value)
-    );
-
-    const snapshot = await getDocs(wordsQuery);
-
-    words.value = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Word, "id">),
-    }));
-
-    resetInputs();
-  } catch (err) {
-    console.error(err);
-  }
-};
+const showCapitals = ref(false);
+const selectedCapital = ref<string>("A");
 
 const resetInputs = () => {
   translations.value = {};
@@ -49,67 +43,156 @@ const resetInputs = () => {
   });
 };
 
+const fetchDictionaryWords = async () => {
+  const snapshot = await getDocs(collection(db, DICTIONARY));
+
+  words.value = snapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<DictionaryWord, "id">),
+    }))
+    .filter((word) =>
+      word.word.toUpperCase().startsWith(selectedCapital.value)
+    );
+
+  resetInputs();
+};
+
+const buildWordsQuery = (category: WordCategory): Query | null => {
+  if (!uid.value) return null;
+
+  switch (category) {
+    case "word":
+    case "dropped":
+      return query(
+        collection(db, WORDS),
+        where("word_type", "==", "word"),
+        where("active", "==", category === "word"),
+        where("user_id", "==", uid.value)
+      );
+
+    case "irregular":
+      return query(
+        collection(db, WORDS),
+        where("word_type", "==", "irregular"),
+        where("active", "==", true),
+        where("user_id", "==", uid.value)
+      );
+
+    case "all":
+      return query(
+        collection(db, WORDS),
+        where("word_type", "==", "word"),
+        where("user_id", "==", uid.value)
+      );
+
+    default:
+      return null;
+  }
+};
+
+const fetchWords = async (category: WordCategory = "word") => {
+  if (!uid.value) return;
+
+  try {
+    showCapitals.value = category === "dictionary";
+
+    if (category === "dictionary") {
+      await fetchDictionaryWords();
+      return;
+    }
+
+    selectedCapital.value = "A";
+
+    const wordsQuery = buildWordsQuery(category);
+    if (!wordsQuery) return;
+
+    const snapshot = await getDocs(wordsQuery);
+
+    words.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Word, "id">),
+    }));
+
+    resetInputs();
+  } catch (error) {
+    console.error("fetchWords error:", error);
+  }
+};
+
 const checkAnswers = () => {
   results.value = {};
 
   words.value.forEach((word) => {
     const userInput = translations.value[word.id]?.trim().toLowerCase();
 
-    let correctAnswer: string;
-    if (selectedLanguage.value === "GEO") {
-      correctAnswer = word.meaning;
-    } else {
-      correctAnswer = word.word;
-    }
+    const correctAnswer =
+      selectedLanguage.value === "GEO" ? word.meaning : word.word;
 
     results.value[word.id] =
       userInput === (correctAnswer || "").trim().toLowerCase();
   });
 };
 
-watch(selectedLanguage, () => {
-  resetInputs();
+watch(selectedCapital, async () => {
+  if (wordCategory.value.code === "dictionary") {
+    await fetchDictionaryWords();
+  }
 });
+
+watch(selectedLanguage, resetInputs);
 
 watch(
   [uid, wordCategory],
   ([newUid, newCategory]) => {
     if (!newUid) return;
-    fetchWords(newCategory);
+    fetchWords(newCategory.code);
   },
   { immediate: true }
 );
 </script>
-
 <template>
   <div class="flex justify-center items-center flex-col w-full mt-10">
     <div
       class="flex flex-col bg-[#333333] p-8 rounded-[10px] border border-gray-400"
     >
-      <div class="flex gap-4 w-80">
-        <FloatLabel variant="on" class="flex-1">
-          <Select
-            v-model="selectedLanguage"
-            :options="[
-              { name: 'Georgian', code: 'GEO' },
-              { name: 'Deutsch', code: 'DEU' },
-            ]"
-            optionLabel="name"
-            optionValue="code"
-            class="w-full"
-          />
-          <label>Language</label>
-        </FloatLabel>
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-4 w-80">
+          <FloatLabel variant="on" class="flex-1">
+            <Select
+              v-model="selectedLanguage"
+              :options="[
+                { name: 'Georgian', code: 'GEO' },
+                { name: 'Deutsch', code: 'DEU' },
+              ]"
+              optionLabel="name"
+              optionValue="code"
+              class="w-full"
+            />
+            <label>Language</label>
+          </FloatLabel>
 
-        <FloatLabel variant="on" class="flex-1">
-          <Select
-            v-model="wordCategory"
-            :options="WORD_CATEGORIES"
-            optionLabel="name"
-            class="w-full"
-          />
-          <label>Category</label>
-        </FloatLabel>
+          <FloatLabel variant="on" class="flex-1">
+            <Select
+              v-model="wordCategory"
+              :options="WORD_CATEGORIES"
+              optionLabel="name"
+              class="w-full"
+            />
+            <label>Category</label>
+          </FloatLabel>
+        </div>
+
+        <div v-if="showCapitals">
+          <FloatLabel variant="on" class="flex-1">
+            <Select
+              v-model="selectedCapital"
+              :options="CAPITALS"
+              class="w-full"
+            />
+            <label>Capital</label>
+          </FloatLabel>
+        </div>
       </div>
 
       <div class="mt-6 w-80">

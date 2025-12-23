@@ -47,6 +47,34 @@ export const WORD_CATEGORIES = [
   { name: "Dropped words", code: "dropped" },
   { name: "Dictionary", code: "dictionary" },
 ];
+export const CAPITALS = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+];
 
 //cookies
 export const UID = "uid";

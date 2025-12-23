@@ -42,3 +42,12 @@ export interface DictionaryWord {
   user_id: string;
   language_id: string;
 }
+
+export type WordCategory =
+  | "word"
+  | "dropped"
+  | "irregular"
+  | "all"
+  | "dictionary";
+
+export type Language = "GEO" | "DEU";
