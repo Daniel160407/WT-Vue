@@ -44,8 +44,10 @@ export interface DictionaryWord {
 }
 
 export interface MessageObj {
+  id: string;
   payload: string;
   sender: string;
+  created_at: number;
 }
 
 export type WordCategory =
