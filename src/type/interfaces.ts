@@ -42,3 +42,19 @@ export interface DictionaryWord {
   user_id: string;
   language_id: string;
 }
+
+export interface MessageObj {
+  id: string;
+  payload: string;
+  sender: string;
+  created_at: number;
+}
+
+export type WordCategory =
+  | "word"
+  | "dropped"
+  | "irregular"
+  | "all"
+  | "dictionary";
+
+export type Language = "GEO" | "DEU";

@@ -5,10 +5,15 @@ import { useRouter } from "vue-router";
 import {
   ADD_WORDS_LABEL,
   ADD_WORDS_ROUTE,
+  AI,
+  AI_ROUTE,
   AUTH_ROUTE,
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  TESTS_LABEL,
+  TRANSLATIONS,
+  TRANSLATIONS_ROUTE,
   WORDS_ROUTE,
 } from "./composables/constants";
 
@@ -24,6 +29,22 @@ const items = ref([
     label: ADD_WORDS_LABEL,
     icon: "pi pi-pencil",
     command: () => router.push(ADD_WORDS_ROUTE),
+  },
+  {
+    label: TESTS_LABEL,
+    icon: "pi pi-file-edit",
+    items: [
+      {
+        label: TRANSLATIONS,
+        icon: "pi pi-pen-to-square",
+        command: () => router.push(TRANSLATIONS_ROUTE),
+      },
+      {
+        label: AI,
+        icon: "pi pi-microchip-ai",
+        command: () => router.push(AI_ROUTE),
+      },
+    ],
   },
   {
     label: DICTIONARY_LABEL,
