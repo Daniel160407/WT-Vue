@@ -218,8 +218,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-start items-center min-h-screen w-full p-6">
-    <div class="mt-10 max-w-3xl w-full p-6 bg-[#333333] rounded-2xl shadow-lg">
+  <div class="flex flex-col justify-start items-center min-h-screen w-full">
+    <div class="mt-10 max-w-3xl w-full p-2 bg-[#333333] rounded-2xl shadow-lg">
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Level {{ level?.level }}
       </h1>

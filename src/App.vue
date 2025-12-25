@@ -60,7 +60,7 @@ const items = ref([
 </script>
 
 <template>
-  <div class="z-20 w-full rounded-xl bg-[#18181B] p-2 lg:min-w-[900px] lg:p-4">
+  <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-[900px] lg:p-4">
     <Menubar :model="items" />
     <router-view />
   </div>

@@ -58,6 +58,10 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
     language_id: formData.value.language_id,
   };
   await addDoc(collection(db, DICTIONARY), dictionaryWord);
+
+  formData.value.word = "";
+  formData.value.meaning = "";
+  formData.value.example = "";
 };
 
 watch(selectedWordType, (v) => (formData.value.word_type = v.code));

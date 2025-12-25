@@ -16,8 +16,12 @@ import { Button, FloatLabel, InputText, Select } from "primevue";
 import { ref, watch } from "vue";
 import { db } from "../../firebase";
 import { useAuth } from "@/composables/useAuth";
-import type { DictionaryWord, Language, Word, WordCategory } from "@/type/interfaces";
-
+import type {
+  DictionaryWord,
+  Language,
+  Word,
+  WordCategory,
+} from "@/type/interfaces";
 
 const { uid } = useAuth();
 
@@ -154,7 +158,7 @@ watch(
 <template>
   <div class="flex justify-center items-center flex-col w-full mt-10">
     <div
-      class="flex flex-col bg-[#333333] p-8 rounded-[10px] border border-gray-400"
+      class="flex flex-col bg-[#333333] p-1 md:p-4 rounded-[10px] border border-gray-400"
     >
       <div class="flex flex-col gap-4">
         <div class="flex gap-4 w-80">
