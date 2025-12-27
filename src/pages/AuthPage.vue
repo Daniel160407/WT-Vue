@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import GoogleSignInButton from "@/components/uiComponents/GoogleSignInButton.vue";
+import GoogleSignInButton from '@/components/UI/GoogleSignInButton.vue';
+
 </script>
 
 <template>

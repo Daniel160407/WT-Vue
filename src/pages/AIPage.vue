@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ResponsePendingLoader from "@/components/uiComponents/ResponsePendingLoader.vue";
 import { GEMINI, USER } from "@/composables/constants";
 import type { MessageObj } from "@/type/interfaces";
 import { GoogleGenAI } from "@google/genai";
@@ -8,6 +7,7 @@ import { ref, nextTick } from "vue";
 
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
 
 const ai = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GOOGLE_AI_KEY,

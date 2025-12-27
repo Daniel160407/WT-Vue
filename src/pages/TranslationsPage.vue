@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import {
+  ACTIVE,
   CAPITALS,
   DICTIONARY,
+  DICTIONARY_CATEGORY,
+  DROPPED_WORDS_CATEGORY,
+  IRREGULAR_VERBS_CATEGORY,
+  USER_ID,
   WORD_CATEGORIES,
+  WORD_TYPE,
   WORDS,
+  WORDS_CATEGORY,
 } from "@/composables/constants";
 import {
   collection,
@@ -28,7 +35,7 @@ const { uid } = useAuth();
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
   name: "Words",
-  code: "word",
+  code: WORDS_CATEGORY,
 });
 
 const words = ref<Array<Word | DictionaryWord>>([]);
@@ -62,32 +69,32 @@ const fetchDictionaryWords = async () => {
   resetInputs();
 };
 
-const buildWordsQuery = (category: WordCategory): Query | null => {
+const buildWordsQuery = (category: string): Query | null => {
   if (!uid.value) return null;
 
   switch (category) {
-    case "word":
-    case "dropped":
+    case WORDS_CATEGORY:
+    case DROPPED_WORDS_CATEGORY:
       return query(
         collection(db, WORDS),
-        where("word_type", "==", "word"),
-        where("active", "==", category === "word"),
-        where("user_id", "==", uid.value)
+        where(WORD_TYPE, "==", WORDS_CATEGORY),
+        where(ACTIVE, "==", category === WORDS_CATEGORY),
+        where(USER_ID, "==", uid.value)
       );
 
     case "irregular":
       return query(
         collection(db, WORDS),
-        where("word_type", "==", "irregular"),
-        where("active", "==", true),
-        where("user_id", "==", uid.value)
+        where(WORD_TYPE, "==", IRREGULAR_VERBS_CATEGORY),
+        where(ACTIVE, "==", true),
+        where(USER_ID, "==", uid.value)
       );
 
     case "all":
       return query(
         collection(db, WORDS),
-        where("word_type", "==", "word"),
-        where("user_id", "==", uid.value)
+        where(WORD_TYPE, "==", WORDS_CATEGORY),
+        where(USER_ID, "==", uid.value)
       );
 
     default:
@@ -95,13 +102,13 @@ const buildWordsQuery = (category: WordCategory): Query | null => {
   }
 };
 
-const fetchWords = async (category: WordCategory = "word") => {
+const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
   if (!uid.value) return;
 
   try {
-    showCapitals.value = category === "dictionary";
+    showCapitals.value = category === DICTIONARY_CATEGORY;
 
-    if (category === "dictionary") {
+    if (category === DICTIONARY_CATEGORY) {
       await fetchDictionaryWords();
       return;
     }
@@ -113,10 +120,12 @@ const fetchWords = async (category: WordCategory = "word") => {
 
     const snapshot = await getDocs(wordsQuery);
 
-    words.value = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Word, "id">),
-    }));
+    words.value = shuffleArray(
+      snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Word, "id">),
+      }))
+    );
 
     resetInputs();
   } catch (error) {
@@ -138,8 +147,17 @@ const checkAnswers = () => {
   });
 };
 
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 watch(selectedCapital, async () => {
-  if (wordCategory.value.code === "dictionary") {
+  if (wordCategory.value.code === DICTIONARY_CATEGORY) {
     await fetchDictionaryWords();
   }
 });

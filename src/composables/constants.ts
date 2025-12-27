@@ -27,6 +27,11 @@ export const LEVEL = "level";
 export const USERS = "users";
 export const DICTIONARY = "dictionary";
 
+export const WORD_TYPE = "word_type";
+export const ACTIVE = "active";
+export const USER_ID = "user_id";
+export const LANGUAGE_ID = "language_id";
+
 //dropdowns
 export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },
@@ -74,7 +79,17 @@ export const CAPITALS = [
   "X",
   "Y",
   "Z",
+  "Ä",
+  "Ö",
+  "Ü",
 ];
+
+//word categories
+export const ALL_CATEGORY = "all";
+export const WORDS_CATEGORY = "word";
+export const IRREGULAR_VERBS_CATEGORY = "irregular";
+export const DROPPED_WORDS_CATEGORY = "dropped";
+export const DICTIONARY_CATEGORY = "dictionary";
 
 //cookies
 export const UID = "uid";
