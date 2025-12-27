@@ -19,6 +19,7 @@ export const ADD_WORDS_ROUTE = "/add";
 export const TRANSLATIONS_ROUTE = "/translations";
 export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
+export const STATISTICS_ROUTE = "/statistics";
 export const AUTH_ROUTE = "/auth";
 
 //firebase
@@ -26,6 +27,7 @@ export const WORDS = "words";
 export const LEVEL = "level";
 export const USERS = "users";
 export const DICTIONARY = "dictionary";
+export const STATISTICS = "statistics";
 
 export const WORD_TYPE = "word_type";
 export const ACTIVE = "active";

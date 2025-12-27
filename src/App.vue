@@ -11,6 +11,8 @@ import {
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  STATISTICS_LABEL,
+  STATISTICS_ROUTE,
   TESTS_LABEL,
   TRANSLATIONS,
   TRANSLATIONS_ROUTE,
@@ -50,6 +52,11 @@ const items = ref([
     label: DICTIONARY_LABEL,
     icon: "pi pi-book",
     command: () => router.push(DICTIONARY_ROUTE),
+  },
+  {
+    label: STATISTICS_LABEL,
+    icon: "pi pi-chart-bar",
+    command: () => router.push(STATISTICS_ROUTE),
   },
   {
     label: "Auth",

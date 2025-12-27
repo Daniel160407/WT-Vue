@@ -3,7 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { FloatLabel, InputText } from "primevue";
 import { onMounted, ref, watch, computed } from "vue";
 import { db } from "../../firebase";
-import { DICTIONARY } from "@/composables/constants";
+import { DICTIONARY, USER_ID } from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
 import type { DictionaryWord } from "@/type/interfaces";
 
@@ -18,7 +18,7 @@ const fetchWords = async () => {
 
   try {
     const snapshot = await getDocs(
-      query(collection(db, DICTIONARY), where("user_id", "==", uid.value))
+      query(collection(db, DICTIONARY), where(USER_ID, "==", uid.value))
     );
 
     words.value = snapshot.docs.map((doc) => ({
@@ -29,14 +29,6 @@ const fetchWords = async () => {
     console.error("Failed to fetch words:", err);
   }
 };
-
-watch(uid, (newUid) => {
-  if (newUid) fetchWords();
-});
-
-onMounted(() => {
-  if (uid.value) fetchWords();
-});
 
 const toggleExample = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
@@ -59,6 +51,14 @@ const groupedWords = computed(() => {
     acc[letter].push(word);
     return acc;
   }, {});
+});
+
+watch(uid, (newUid) => {
+  if (newUid) fetchWords();
+});
+
+onMounted(() => {
+  if (uid.value) fetchWords();
 });
 </script>
 

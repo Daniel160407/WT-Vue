@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from "vue";
-import { type DictionaryWord, type Level, type Word } from "@/type/interfaces";
+import { type Level, type Word } from "@/type/interfaces";
 import { db } from "../../firebase";
 import {
   collection,

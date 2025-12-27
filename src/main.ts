@@ -8,6 +8,7 @@ import { ToastService } from "primevue";
 import { createPinia } from "pinia";
 import Noir from "./presets/Noir";
 import router from "./composables/router";
+import "@fortawesome/fontawesome-free/css/all.css";
 
 const app = createApp(App);
 const pinia = createPinia();
