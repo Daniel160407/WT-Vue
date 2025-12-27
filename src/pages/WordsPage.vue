@@ -98,7 +98,7 @@ const fetchLevel = async () => {
     if (snapshot.empty) return;
 
     const docSnap = snapshot.docs[0];
-    const currentLevel = docSnap.data().level ?? 1;
+    const currentLevel = docSnap!.data().level ?? 1;
 
     if (currentLevel > 5) {
       await resetLevelAndDeleteWords();
@@ -106,7 +106,7 @@ const fetchLevel = async () => {
       return;
     }
 
-    level.value = { id: docSnap.id, ...(docSnap.data() as Omit<Level, "id">) };
+    level.value = { id: docSnap!.id, ...(docSnap!.data() as Omit<Level, "id">) };
   } finally {
     loading.value = false;
   }
@@ -173,10 +173,8 @@ const handleWordDelete = async (word: Word) => {
     acceptProps: { label: "Delete", severity: "danger" },
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
-      // delete from WORDS
       await deleteDoc(doc(db, WORDS, word.id));
 
-      // delete from DICTIONARY safely
       const q = query(
         collection(db, DICTIONARY),
         where("word", "==", word.word),
@@ -185,10 +183,9 @@ const handleWordDelete = async (word: Word) => {
 
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        await deleteDoc(doc(db, DICTIONARY, snapshot.docs[0].id));
+        await deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id));
       }
 
-      // update UI
       words.value = words.value.filter((w) => w.id !== word.id);
       checkedWordIds.value.delete(word.id);
       showWordOperations.value = false;
@@ -197,7 +194,7 @@ const handleWordDelete = async (word: Word) => {
   });
 };
 
-const handleWordEdit = async (word: Word) => {};
+// const handleWordEdit = async (word: Word) => {};
 
 watch([selectedWordTypeCode, uid], ([type, user]) => {
   if (type && user) fetchWords(type);
@@ -305,7 +302,6 @@ onMounted(() => {
               <Button
                 icon="pi pi-pencil"
                 severity="info"
-                @click="handleWordEdit"
               />
             </div>
           </div>
