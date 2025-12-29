@@ -2,7 +2,13 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { ref, watch } from "vue";
 import { db } from "../../firebase";
-import { DICTIONARY, STATISTICS, USER_ID } from "@/composables/constants";
+import {
+  Advancements,
+  DICTIONARY,
+  groupedAdvancements,
+  STATISTICS,
+  USER_ID,
+} from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
 import type {
   DictionaryWord,
@@ -10,6 +16,7 @@ import type {
   Statistics,
   WordLevel,
 } from "@/type/interfaces";
+import { Button } from "primevue";
 
 const emptyLevelStats = (): LevelStats => ({
   A1: 0,
@@ -27,6 +34,8 @@ const cyclesCompleted = ref<number>(0);
 const dayStreak = ref<number>(0);
 const advancements = ref<string[]>([]);
 const wordLevelContribution = ref<LevelStats>(emptyLevelStats());
+const showAllAdvancements = ref<boolean>(false);
+const allAdvancements = ref<string[]>([]);
 
 const fetchWords = async () => {
   if (!uid.value) return;
@@ -74,6 +83,16 @@ const fetchStatistics = async () => {
     console.error(err);
   }
 };
+
+const handleShowAllAdvancements = () => {
+  showAllAdvancements.value = !showAllAdvancements.value;
+  if (showAllAdvancements.value) {
+    allAdvancements.value = Object.values(Advancements);
+  }
+};
+
+const hasAdvancement = (advancement: string) =>
+  advancements.value.includes(advancement);
 
 watch(
   uid,
@@ -228,12 +247,23 @@ watch(
   <div
     class="w-full max-w-6xl mt-12 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-lg"
   >
-    <h2 class="text-lg md:text-xl font-bold tracking-wide text-white mb-6">
-      Your Achievements
-    </h2>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg md:text-xl font-bold tracking-wide text-white">
+        Your Achievements
+      </h2>
+
+      <Button
+        icon="pi pi-eye"
+        label="Show all"
+        severity="secondary"
+        size="small"
+        @click="handleShowAllAdvancements"
+        class="bg-[#1c1c1c]! border-[#2a2a2a]! text-gray-300! hover:text-white! hover:bg-[#2a2a2a]! transition-colors duration-300"
+      />
+    </div>
 
     <div
-      v-if="advancements.length"
+      v-if="advancements.length && !showAllAdvancements"
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
     >
       <div
@@ -250,6 +280,125 @@ watch(
         <div class="flex-1">
           <p class="text-sm md:text-base font-semibold text-white leading-snug">
             {{ advancement }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-else-if="advancements.length && showAllAdvancements"
+      class="grid grid-cols-1 md:grid-cols-3 gap-8"
+    >
+      <div class="flex flex-col gap-4">
+        <div
+          class="text-sm uppercase tracking-widest text-yellow-400 flex gap-2 items-center"
+        >
+          <i class="pi pi-book"></i>
+          <p>Words Progress</p>
+        </div>
+
+        <div
+          v-for="adv in groupedAdvancements.words"
+          :key="adv"
+          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
+          :class="
+            hasAdvancement(adv)
+              ? 'bg-[#1c1c1c] hover:bg-[#222]'
+              : 'bg-[#141414] opacity-50'
+          "
+        >
+          <div
+            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+            :class="
+              hasAdvancement(adv)
+                ? 'bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400'
+                : 'bg-[#222] text-gray-500'
+            "
+          >
+            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+          </div>
+
+          <p
+            class="text-sm font-semibold"
+            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+          >
+            {{ adv }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div
+          class="text-sm uppercase tracking-widest text-sky-400 flex gap-2 items-center"
+        >
+          <i class="pi pi-sync"></i>
+          <p>Cycles Progress</p>
+        </div>
+
+        <div
+          v-for="adv in groupedAdvancements.cycles"
+          :key="adv"
+          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
+          :class="
+            hasAdvancement(adv)
+              ? 'bg-[#1c1c1c] hover:bg-[#222]'
+              : 'bg-[#141414] opacity-50'
+          "
+        >
+          <div
+            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+            :class="
+              hasAdvancement(adv)
+                ? 'bg-linear-to-br from-sky-500/20 to-sky-700/20 text-sky-400'
+                : 'bg-[#222] text-gray-500'
+            "
+          >
+            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+          </div>
+
+          <p
+            class="text-sm font-semibold"
+            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+          >
+            {{ adv }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div
+          class="text-sm uppercase tracking-widest text-orange-400 flex gap-2 items-center"
+        >
+          <i class="fas fa-fire"></i>
+          <p>Day Streak Progress</p>
+        </div>
+
+        <div
+          v-for="adv in groupedAdvancements.days"
+          :key="adv"
+          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
+          :class="
+            hasAdvancement(adv)
+              ? 'bg-[#1c1c1c] hover:bg-[#222]'
+              : 'bg-[#141414] opacity-50'
+          "
+        >
+          <div
+            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+            :class="
+              hasAdvancement(adv)
+                ? 'bg-linear-to-br from-orange-500/20 to-orange-700/20 text-orange-400'
+                : 'bg-[#222] text-gray-500'
+            "
+          >
+            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+          </div>
+
+          <p
+            class="text-sm font-semibold"
+            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+          >
+            {{ adv }}
           </p>
         </div>
       </div>

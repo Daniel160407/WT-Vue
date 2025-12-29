@@ -133,3 +133,36 @@ export const Advancements = {
   SIXMONTHSTREAK: "Titan of Wisdom (6 months streak)",
   ONEYEARSTREAK: "Eternal Sage (1 year streak)",
 } as const;
+
+export const groupedAdvancements = {
+  words: [
+    Advancements.TENWORDS,
+    Advancements.FIFTYWORDS,
+    Advancements.HUNDREDWORDS,
+    Advancements.THREEHUNDREDWORDS,
+    Advancements.FIVEHUNDREDWORDS,
+    Advancements.SEVENHUNDREDWORDS,
+    Advancements.THOUSANDWORDS,
+    Advancements.THREETHOUSANDWORDS,
+    Advancements.FIVETHOUSANDWORDS,
+  ],
+  cycles: [
+    Advancements.ONECYCLESTREAK,
+    Advancements.FIVECYCLESSTREAK,
+    Advancements.TENCYCLESSTREAK,
+    Advancements.TWENTYCYCLESSTREAK,
+    Advancements.THIRTYCYCLESSTREAK,
+    Advancements.FIFTYCYCLESSTREAK,
+  ],
+  days: [
+    Advancements.ONEDAYSTREAK,
+    Advancements.THREEDAYSTREAK,
+    Advancements.WEEKSTREAK,
+    Advancements.TWOWEEKSTREAK,
+    Advancements.THREEWEEKSTREAK,
+    Advancements.MONTHSTREAK,
+    Advancements.TWOMONTHSTREAK,
+    Advancements.SIXMONTHSTREAK,
+    Advancements.ONEYEARSTREAK,
+  ],
+};
