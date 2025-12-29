@@ -179,237 +179,258 @@ watch(
       </div>
     </div>
   </div>
-
-  <div
-    class="w-full max-w-6xl mt-10 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-lg"
-  >
-    <h2 class="text-lg md:text-xl font-bold tracking-wide text-white mb-6">
-      Word Level Contribution
-    </h2>
-
-    <ul class="grid grid-cols-2 sm:grid-cols-3 gap-6">
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">A1</span>
-        <span class="text-3xl font-extrabold text-emerald-400">
-          {{ wordLevelContribution.A1 }}
-        </span>
-      </li>
-
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">A2</span>
-        <span class="text-3xl font-extrabold text-lime-400">
-          {{ wordLevelContribution.A2 }}
-        </span>
-      </li>
-
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">B1</span>
-        <span class="text-3xl font-extrabold text-sky-400">
-          {{ wordLevelContribution.B1 }}
-        </span>
-      </li>
-
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">B2</span>
-        <span class="text-3xl font-extrabold text-indigo-400">
-          {{ wordLevelContribution.B2 }}
-        </span>
-      </li>
-
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">C1</span>
-        <span class="text-3xl font-extrabold text-purple-400">
-          {{ wordLevelContribution.C1 }}
-        </span>
-      </li>
-
-      <li
-        class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
-      >
-        <span class="text-sm uppercase tracking-widest text-gray-400">C2</span>
-        <span class="text-3xl font-extrabold text-pink-400">
-          {{ wordLevelContribution.C2 }}
-        </span>
-      </li>
-    </ul>
-  </div>
-
-  <div
-    class="w-full max-w-6xl mt-12 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-lg"
-  >
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-lg md:text-xl font-bold tracking-wide text-white">
-        Your Achievements
+  <div class="flex flex-col justify-center items-center">
+    <div
+      class="w-full max-w-6xl mt-10 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-lg"
+    >
+      <h2 class="text-lg md:text-xl font-bold tracking-wide text-white mb-6">
+        Word Level Contribution
       </h2>
 
-      <Button
-        icon="pi pi-eye"
-        label="Show all"
-        severity="secondary"
-        size="small"
-        @click="handleShowAllAdvancements"
-        class="bg-[#1c1c1c]! border-[#2a2a2a]! text-gray-300! hover:text-white! hover:bg-[#2a2a2a]! transition-colors duration-300"
-      />
+      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-6">
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >A1</span
+          >
+          <span class="text-3xl font-extrabold text-emerald-400">
+            {{ wordLevelContribution.A1 }}
+          </span>
+        </li>
+
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >A2</span
+          >
+          <span class="text-3xl font-extrabold text-lime-400">
+            {{ wordLevelContribution.A2 }}
+          </span>
+        </li>
+
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >B1</span
+          >
+          <span class="text-3xl font-extrabold text-sky-400">
+            {{ wordLevelContribution.B1 }}
+          </span>
+        </li>
+
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >B2</span
+          >
+          <span class="text-3xl font-extrabold text-indigo-400">
+            {{ wordLevelContribution.B2 }}
+          </span>
+        </li>
+
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >C1</span
+          >
+          <span class="text-3xl font-extrabold text-purple-400">
+            {{ wordLevelContribution.C1 }}
+          </span>
+        </li>
+
+        <li
+          class="flex flex-col items-center justify-center p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-colors duration-300"
+        >
+          <span class="text-sm uppercase tracking-widest text-gray-400"
+            >C2</span
+          >
+          <span class="text-3xl font-extrabold text-pink-400">
+            {{ wordLevelContribution.C2 }}
+          </span>
+        </li>
+      </ul>
     </div>
 
     <div
-      v-if="advancements.length && !showAllAdvancements"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      class="w-full max-w-6xl mt-12 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-lg"
     >
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg md:text-xl font-bold tracking-wide text-white">
+          Your Achievements
+        </h2>
+
+        <Button
+          icon="pi pi-eye"
+          label="Show all"
+          severity="secondary"
+          size="small"
+          @click="handleShowAllAdvancements"
+          class="bg-[#1c1c1c]! border-[#2a2a2a]! text-gray-300! hover:text-white! hover:bg-[#2a2a2a]! transition-colors duration-300"
+        />
+      </div>
+
       <div
-        v-for="advancement in advancements"
-        :key="advancement"
-        class="flex items-center gap-4 p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-all duration-300 shadow-md hover:shadow-lg"
+        v-if="advancements.length && !showAllAdvancements"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <div
-          class="flex justify-center items-center w-12 h-12 rounded-xl bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400 text-xl"
-        >
-          <i class="pi pi-crown"></i>
-        </div>
-
-        <div class="flex-1">
-          <p class="text-sm md:text-base font-semibold text-white leading-snug">
-            {{ advancement }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-else-if="advancements.length && showAllAdvancements"
-      class="grid grid-cols-1 md:grid-cols-3 gap-8"
-    >
-      <div class="flex flex-col gap-4">
-        <div
-          class="text-sm uppercase tracking-widest text-yellow-400 flex gap-2 items-center"
-        >
-          <i class="pi pi-book"></i>
-          <p>Words Progress</p>
-        </div>
-
-        <div
-          v-for="adv in groupedAdvancements.words"
-          :key="adv"
-          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
-          :class="
-            hasAdvancement(adv)
-              ? 'bg-[#1c1c1c] hover:bg-[#222]'
-              : 'bg-[#141414] opacity-50'
-          "
+          v-for="advancement in advancements"
+          :key="advancement"
+          class="flex items-center gap-4 p-5 rounded-xl bg-[#1c1c1c] hover:bg-[#222] transition-all duration-300 shadow-md hover:shadow-lg"
         >
           <div
-            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
-            :class="
-              hasAdvancement(adv)
-                ? 'bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400'
-                : 'bg-[#222] text-gray-500'
-            "
+            class="flex justify-center items-center w-12 h-12 rounded-xl bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400 text-xl"
           >
-            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+            <i class="pi pi-crown"></i>
           </div>
 
-          <p
-            class="text-sm font-semibold"
-            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
-          >
-            {{ adv }}
-          </p>
+          <div class="flex-1">
+            <p
+              class="text-sm md:text-base font-semibold text-white leading-snug"
+            >
+              {{ advancement }}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-col gap-4">
-        <div
-          class="text-sm uppercase tracking-widest text-sky-400 flex gap-2 items-center"
-        >
-          <i class="pi pi-sync"></i>
-          <p>Cycles Progress</p>
-        </div>
-
-        <div
-          v-for="adv in groupedAdvancements.cycles"
-          :key="adv"
-          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
-          :class="
-            hasAdvancement(adv)
-              ? 'bg-[#1c1c1c] hover:bg-[#222]'
-              : 'bg-[#141414] opacity-50'
-          "
-        >
+      <div
+        v-else-if="advancements.length && showAllAdvancements"
+        class="grid grid-cols-1 md:grid-cols-3 gap-8"
+      >
+        <div class="flex flex-col gap-4">
           <div
-            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
-            :class="
-              hasAdvancement(adv)
-                ? 'bg-linear-to-br from-sky-500/20 to-sky-700/20 text-sky-400'
-                : 'bg-[#222] text-gray-500'
-            "
+            class="text-sm uppercase tracking-widest text-yellow-400 flex gap-2 items-center"
           >
-            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+            <i class="pi pi-book"></i>
+            <p>Words Progress</p>
           </div>
 
-          <p
-            class="text-sm font-semibold"
-            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
-          >
-            {{ adv }}
-          </p>
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-4">
-        <div
-          class="text-sm uppercase tracking-widest text-orange-400 flex gap-2 items-center"
-        >
-          <i class="fas fa-fire"></i>
-          <p>Day Streak Progress</p>
-        </div>
-
-        <div
-          v-for="adv in groupedAdvancements.days"
-          :key="adv"
-          class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
-          :class="
-            hasAdvancement(adv)
-              ? 'bg-[#1c1c1c] hover:bg-[#222]'
-              : 'bg-[#141414] opacity-50'
-          "
-        >
           <div
-            class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+            v-for="adv in groupedAdvancements.words"
+            :key="adv"
+            class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
             :class="
               hasAdvancement(adv)
-                ? 'bg-linear-to-br from-orange-500/20 to-orange-700/20 text-orange-400'
-                : 'bg-[#222] text-gray-500'
+                ? 'bg-[#1c1c1c] hover:bg-[#222]'
+                : 'bg-[#141414] opacity-50'
             "
           >
-            <i :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"></i>
+            <div
+              class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+              :class="
+                hasAdvancement(adv)
+                  ? 'bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400'
+                  : 'bg-[#222] text-gray-500'
+              "
+            >
+              <i
+                :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"
+              ></i>
+            </div>
+
+            <p
+              class="text-sm font-semibold"
+              :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+            >
+              {{ adv }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div
+            class="text-sm uppercase tracking-widest text-sky-400 flex gap-2 items-center"
+          >
+            <i class="pi pi-sync"></i>
+            <p>Cycles Progress</p>
           </div>
 
-          <p
-            class="text-sm font-semibold"
-            :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+          <div
+            v-for="adv in groupedAdvancements.cycles"
+            :key="adv"
+            class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
+            :class="
+              hasAdvancement(adv)
+                ? 'bg-[#1c1c1c] hover:bg-[#222]'
+                : 'bg-[#141414] opacity-50'
+            "
           >
-            {{ adv }}
-          </p>
+            <div
+              class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+              :class="
+                hasAdvancement(adv)
+                  ? 'bg-linear-to-br from-sky-500/20 to-sky-700/20 text-sky-400'
+                  : 'bg-[#222] text-gray-500'
+              "
+            >
+              <i
+                :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"
+              ></i>
+            </div>
+
+            <p
+              class="text-sm font-semibold"
+              :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+            >
+              {{ adv }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div
+            class="text-sm uppercase tracking-widest text-orange-400 flex gap-2 items-center"
+          >
+            <i class="fas fa-fire"></i>
+            <p>Day Streak Progress</p>
+          </div>
+
+          <div
+            v-for="adv in groupedAdvancements.days"
+            :key="adv"
+            class="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 shadow-md"
+            :class="
+              hasAdvancement(adv)
+                ? 'bg-[#1c1c1c] hover:bg-[#222]'
+                : 'bg-[#141414] opacity-50'
+            "
+          >
+            <div
+              class="flex justify-center items-center w-11 h-11 rounded-xl text-lg"
+              :class="
+                hasAdvancement(adv)
+                  ? 'bg-linear-to-br from-orange-500/20 to-orange-700/20 text-orange-400'
+                  : 'bg-[#222] text-gray-500'
+              "
+            >
+              <i
+                :class="hasAdvancement(adv) ? 'pi pi-crown' : 'pi pi-lock'"
+              ></i>
+            </div>
+
+            <p
+              class="text-sm font-semibold"
+              :class="hasAdvancement(adv) ? 'text-white' : 'text-gray-500'"
+            >
+              {{ adv }}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div
-      v-else
-      class="flex flex-col items-center justify-center py-10 text-gray-400"
-    >
-      <i class="pi pi-lock text-3xl mb-3"></i>
-      <p class="text-sm">No achievements unlocked yet</p>
+      <div
+        v-else
+        class="flex flex-col items-center justify-center py-10 text-gray-400"
+      >
+        <i class="pi pi-lock text-3xl mb-3"></i>
+        <p class="text-sm">No achievements unlocked yet</p>
+      </div>
     </div>
   </div>
 </template>
