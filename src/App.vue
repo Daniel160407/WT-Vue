@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Menubar } from "primevue";
+import Toast from "primevue/toast";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import {
@@ -11,6 +12,8 @@ import {
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  STATISTICS_LABEL,
+  STATISTICS_ROUTE,
   TESTS_LABEL,
   TRANSLATIONS,
   TRANSLATIONS_ROUTE,
@@ -52,6 +55,11 @@ const items = ref([
     command: () => router.push(DICTIONARY_ROUTE),
   },
   {
+    label: STATISTICS_LABEL,
+    icon: "pi pi-chart-bar",
+    command: () => router.push(STATISTICS_ROUTE),
+  },
+  {
     label: "Auth",
     icon: "pi pi-chart-bar",
     command: () => router.push(AUTH_ROUTE),
@@ -62,6 +70,7 @@ const items = ref([
 <template>
   <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-[900px] lg:p-4">
     <Menubar :model="items" />
+    <Toast />
     <router-view />
   </div>
 </template>

@@ -19,6 +19,7 @@ export const ADD_WORDS_ROUTE = "/add";
 export const TRANSLATIONS_ROUTE = "/translations";
 export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
+export const STATISTICS_ROUTE = "/statistics";
 export const AUTH_ROUTE = "/auth";
 
 //firebase
@@ -26,6 +27,7 @@ export const WORDS = "words";
 export const LEVEL = "level";
 export const USERS = "users";
 export const DICTIONARY = "dictionary";
+export const STATISTICS = "statistics";
 
 export const WORD_TYPE = "word_type";
 export const ACTIVE = "active";
@@ -99,3 +101,68 @@ export const PHOTO_URL = "photoURL";
 //AI
 export const GEMINI = "gemini";
 export const USER = "user";
+
+export const Advancements = {
+  // Words advancements
+  TENWORDS: "The First Step (Learn 10 words)",
+  FIFTYWORDS: "The Path of Knowledge (Learn 50 words)",
+  HUNDREDWORDS: "The Scholar's Journey (Learn 100 words)",
+  THREEHUNDREDWORDS: "Wielder of Words (Learn 300 words)",
+  FIVEHUNDREDWORDS: "Master of Words (Learn 500 words)",
+  SEVENHUNDREDWORDS: "Enlightened Mind (Learn 700 words)",
+  THOUSANDWORDS: "The Wordsmith (Learn 1,000 words)",
+  THREETHOUSANDWORDS: "Language Alchemist (Learn 3,000 words)",
+  FIVETHOUSANDWORDS: "The Polyglot (Learn 5,000 words)",
+
+  // Cycle advancements
+  ONECYCLESTREAK: "The Initiate's Cycle (1 cycle streak)",
+  FIVECYCLESSTREAK: "Adept's Cycle (5 cycles streak)",
+  TENCYCLESSTREAK: "Master of Cycles (10 cycles streak)",
+  TWENTYCYCLESSTREAK: "Wizard of Cycles (20 cycles streak)",
+  THIRTYCYCLESSTREAK: "Sage of Cycles (30 cycles streak)",
+  FIFTYCYCLESSTREAK: "Grandmaster of Cycles (50 cycles streak)",
+
+  // Day streak advancements
+  ONEDAYSTREAK: "First Flame (1 day streak)",
+  THREEDAYSTREAK: "Kindled Spirit (3 days streak)",
+  WEEKSTREAK: "Rising Star (1 week streak)",
+  TWOWEEKSTREAK: "Ascendant (2 weeks streak)",
+  THREEWEEKSTREAK: "Immortal (3 weeks streak)",
+  MONTHSTREAK: "Legendary Learner (1 month streak)",
+  TWOMONTHSTREAK: "Hero of Knowledge (2 months streak)",
+  SIXMONTHSTREAK: "Titan of Wisdom (6 months streak)",
+  ONEYEARSTREAK: "Eternal Sage (1 year streak)",
+} as const;
+
+export const groupedAdvancements = {
+  words: [
+    Advancements.TENWORDS,
+    Advancements.FIFTYWORDS,
+    Advancements.HUNDREDWORDS,
+    Advancements.THREEHUNDREDWORDS,
+    Advancements.FIVEHUNDREDWORDS,
+    Advancements.SEVENHUNDREDWORDS,
+    Advancements.THOUSANDWORDS,
+    Advancements.THREETHOUSANDWORDS,
+    Advancements.FIVETHOUSANDWORDS,
+  ],
+  cycles: [
+    Advancements.ONECYCLESTREAK,
+    Advancements.FIVECYCLESSTREAK,
+    Advancements.TENCYCLESSTREAK,
+    Advancements.TWENTYCYCLESSTREAK,
+    Advancements.THIRTYCYCLESSTREAK,
+    Advancements.FIFTYCYCLESSTREAK,
+  ],
+  days: [
+    Advancements.ONEDAYSTREAK,
+    Advancements.THREEDAYSTREAK,
+    Advancements.WEEKSTREAK,
+    Advancements.TWOWEEKSTREAK,
+    Advancements.THREEWEEKSTREAK,
+    Advancements.MONTHSTREAK,
+    Advancements.TWOMONTHSTREAK,
+    Advancements.SIXMONTHSTREAK,
+    Advancements.ONEYEARSTREAK,
+  ],
+};

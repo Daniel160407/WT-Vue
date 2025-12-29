@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Form } from "@primevue/forms";
+import { useToast } from "primevue/usetoast";
 import {
   Button,
   FloatLabel,
@@ -18,6 +19,10 @@ import {
 import Cookies from "js-cookie";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useStatisticsStore } from "@/composables/useStatisticsStore";
+
+const stats = useStatisticsStore();
+const toast = useToast();
 
 const selectedWordType = ref({ name: "Words", code: "word" });
 const selectedLevel = ref({
@@ -58,6 +63,27 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
     language_id: formData.value.language_id,
   };
   await addDoc(collection(db, DICTIONARY), dictionaryWord);
+
+  await stats.increaseWordsLearned();
+  await stats.updateDayStreak();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  if (daysAdvancement) {
+    toast.add({
+      severity: "success",
+      summary: "Advancement made!",
+      detail: daysAdvancement,
+      life: 6000,
+    });
+  }
+  const wordsAdvancement = await stats.checkAndGetWordsAdvancement();
+  if (wordsAdvancement) {
+    toast.add({
+      severity: "success",
+      summary: "Advancement made!",
+      detail: wordsAdvancement,
+      life: 6000,
+    });
+  }
 
   formData.value.word = "";
   formData.value.meaning = "";
