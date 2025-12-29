@@ -125,7 +125,7 @@ watch(
         class="flex items-center border border-[#333333] gap-5 p-6 rounded-2xl bg-linear-to-br from-[#262626] to-[#1e1e1e] shadow-medium hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
       >
         <div
-          class="flex justify-center items-center w-16 h-16 rounded-2xl bg-linear-to-br from-[#3f3f3f] to-[#2f2f2f] text-yellow-400 text-2xl shadow-inner"
+          class="flex justify-center items-center w-16 h-16 rounded-xl bg-linear-to-br from-yellow-500/20 to-yellow-700/20 text-yellow-400 text-xl"
         >
           <i class="pi pi-book"></i>
         </div>
