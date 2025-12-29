@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   ACTIVE,
+  ALL_CATEGORY,
   CAPITALS,
   DICTIONARY,
   DICTIONARY_CATEGORY,
@@ -29,8 +30,12 @@ import type {
   Word,
   WordCategory,
 } from "@/type/interfaces";
+import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useToast } from "primevue/usetoast";
 
 const { uid } = useAuth();
+const stats = useStatisticsStore();
+const toast = useToast();
 
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
@@ -82,7 +87,7 @@ const buildWordsQuery = (category: string): Query | null => {
         where(USER_ID, "==", uid.value)
       );
 
-    case "irregular":
+    case IRREGULAR_VERBS_CATEGORY:
       return query(
         collection(db, WORDS),
         where(WORD_TYPE, "==", IRREGULAR_VERBS_CATEGORY),
@@ -90,7 +95,7 @@ const buildWordsQuery = (category: string): Query | null => {
         where(USER_ID, "==", uid.value)
       );
 
-    case "all":
+    case ALL_CATEGORY:
       return query(
         collection(db, WORDS),
         where(WORD_TYPE, "==", WORDS_CATEGORY),
@@ -145,6 +150,17 @@ const checkAnswers = () => {
     results.value[word.id] =
       userInput === (correctAnswer || "").trim().toLowerCase();
   });
+
+  stats.updateDayStreak();
+  const daysAdvancement = stats.getDayAdvancement();
+  if (daysAdvancement) {
+    toast.add({
+      severity: "success",
+      summary: "Advancement made!",
+      detail: daysAdvancement,
+      life: 6000,
+    });
+  }
 };
 
 const shuffleArray = (array: any[]) => {

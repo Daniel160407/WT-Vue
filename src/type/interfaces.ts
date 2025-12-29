@@ -1,3 +1,4 @@
+import type { Advancements } from "@/composables/constants";
 import type { Timestamp } from "firebase/firestore";
 
 export type Language = "GEO" | "DEU";
@@ -14,6 +15,8 @@ export type WordCategory =
 export type MessageSender = "user" | "gemini";
 
 export type LevelStats = Record<WordLevel, number>;
+
+export type Advancement = (typeof Advancements)[keyof typeof Advancements];
 
 export interface Word {
   id: string;

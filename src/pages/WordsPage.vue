@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  increment,
   query,
   where,
   writeBatch,
@@ -24,11 +25,16 @@ import {
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import { ProgressSpinner, useConfirm } from "primevue";
+import { ConfirmDialog, ProgressSpinner } from "primevue";
+import { useToast } from "primevue/usetoast";
 import { useAuth } from "@/composables/useAuth";
+import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useConfirm } from "primevue/useconfirm";
 
 const { uid, loading: authLoading } = useAuth();
+const stats = useStatisticsStore();
 const confirm = useConfirm();
+const toast = useToast();
 
 const words = ref<Word[]>([]);
 const level = ref<Level>();
@@ -55,6 +61,8 @@ const allWordsChecked = computed({
 
 const hasCheckedWords = computed(() => checkedWordIds.value.size > 0);
 
+const levelDocId = ref<string | null>(null);
+
 const toggleWordExamples = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
 };
@@ -67,15 +75,53 @@ const toggleWordCheck = (wordId: string, checked: boolean) => {
   }
 };
 
+const handleWordDoubleClick = (id: string) => {
+  showWordOperations.value = true;
+  selectedWordOperationsId.value = id;
+};
+
+const mapWords = (snapshot: any): Word[] =>
+  snapshot.docs.map((d: any) => ({
+    id: d.id,
+    ...(d.data() as Omit<Word, "id">),
+  }));
+
+const createWordsQuery = (wordType: string, active: boolean) =>
+  query(
+    collection(db, WORDS),
+    where(WORD_TYPE, "==", wordType),
+    where(ACTIVE, "==", active),
+    where(USER_ID, "==", uid.value)
+  );
+
+const getLevelDocument = async (): Promise<{
+  id: string;
+  data: any;
+} | null> => {
+  if (!uid.value) return null;
+
+  const snapshot = await getDocs(
+    query(collection(db, LEVEL), where(USER_ID, "==", uid.value))
+  );
+
+  if (snapshot.empty) return null;
+
+  const docSnap = snapshot.docs[0];
+  return {
+    id: docSnap!.id,
+    data: docSnap!.data(),
+  };
+};
+
 const resetLevelAndDeleteWords = async () => {
   if (!uid.value) return;
 
+  const levelDoc = await getLevelDocument();
+  if (!levelDoc) return;
+
   const batch = writeBatch(db);
 
-  const levelSnapshot = await getDocs(collection(db, LEVEL));
-  levelSnapshot.docs.forEach((d) =>
-    batch.update(doc(db, LEVEL, d.id), { level: 1 })
-  );
+  batch.update(doc(db, LEVEL, levelDoc.id), { level: 1 });
 
   const wordsSnapshot = await getDocs(
     query(
@@ -89,59 +135,129 @@ const resetLevelAndDeleteWords = async () => {
 
   await batch.commit();
   words.value = [];
+  levelDocId.value = null;
 };
 
-const fetchLevel = async () => {
-  loading.value = true;
-  try {
-    const snapshot = await getDocs(collection(db, LEVEL));
-    if (snapshot.empty) return;
+const advanceLevel = async () => {
+  if (!uid.value) return;
 
-    const docSnap = snapshot.docs[0];
-    const currentLevel = docSnap!.data().level ?? 1;
+  const levelDoc = await getLevelDocument();
+  if (!levelDoc) return;
+
+  const batch = writeBatch(db);
+  batch.update(doc(db, LEVEL, levelDoc.id), { level: increment(1) });
+  await batch.commit();
+
+  levelDocId.value = levelDoc.id;
+  if (level.value!.level === 5) {
+    await resetLevelAndDeleteWords();
+    await fetchLevel();
+    await stats.increaseCycles();
+
+    const cyclesAdvancement = stats.getCyclesAdvancement();
+
+    if (cyclesAdvancement) {
+      toast.add({
+        severity: "success",
+        summary: "New cycles streak!",
+        detail: cyclesAdvancement,
+        life: 6000,
+      });
+    }
+    return;
+  }
+  level.value!.level++;
+};
+
+const reactivateInactiveWords = async (): Promise<boolean> => {
+  if (!uid.value) return false;
+
+  const wordsSnapshot = await getDocs(
+    query(
+      collection(db, WORDS),
+      where(USER_ID, "==", uid.value),
+      where(ACTIVE, "==", false)
+    )
+  );
+
+  if (wordsSnapshot.empty) return false;
+
+  const batch = writeBatch(db);
+  wordsSnapshot.docs.forEach((wordDoc) => {
+    batch.update(doc(db, WORDS, wordDoc.id), { active: true });
+  });
+
+  await batch.commit();
+  return true;
+};
+
+const fetchLevel = async (): Promise<void> => {
+  if (!uid.value) {
+    level.value = undefined;
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    const levelDoc = await getLevelDocument();
+    if (!levelDoc) {
+      level.value = undefined;
+      return;
+    }
+
+    const currentLevel = levelDoc.data.level ?? 1;
 
     if (currentLevel > 5) {
       await resetLevelAndDeleteWords();
       await fetchLevel();
+      stats.increaseCycles();
+
+      const cyclesAdvancement = stats.getCyclesAdvancement();
+      if (cyclesAdvancement) {
+        toast.add({
+          severity: "success",
+          summary: "New cycles streak!",
+          detail: cyclesAdvancement,
+          life: 6000,
+        });
+      }
       return;
     }
 
-    level.value = { id: docSnap!.id, ...(docSnap!.data() as Omit<Level, "id">) };
+    levelDocId.value = levelDoc.id;
+
+    level.value = {
+      id: levelDoc.id,
+      ...(levelDoc.data as Omit<Level, "id">),
+    };
   } finally {
     loading.value = false;
   }
 };
 
-const mapWords = (snapshot: any): Word[] =>
-  snapshot.docs.map((d: any) => ({
-    id: d.id,
-    ...(d.data() as Omit<Word, "id">),
-  }));
-
-const getWordsQuery = (wordType: string, active: boolean) =>
-  query(
-    collection(db, WORDS),
-    where(WORD_TYPE, "==", wordType),
-    where(ACTIVE, "==", active),
-    where(USER_ID, "==", uid.value)
-  );
-
 const fetchWords = async (wordType: string) => {
   if (authLoading.value || !uid.value) return;
+
   loading.value = true;
 
   try {
-    const snapshot = await getDocs(getWordsQuery(wordType, true));
+    const snapshot = await getDocs(createWordsQuery(wordType, true));
     words.value = mapWords(snapshot);
     expandedWordId.value = null;
-    await fetchLevel();
+
+    if (!levelDocId.value) {
+      await fetchLevel();
+    }
   } finally {
     loading.value = false;
   }
 };
 
 const dropWords = async () => {
-  if (!hasCheckedWords.value) return;
+  if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
+    return;
+
   loading.value = true;
 
   try {
@@ -153,17 +269,35 @@ const dropWords = async () => {
     await batch.commit();
     checkedWordIds.value.clear();
 
-    if (selectedWordTypeCode.value) {
-      await fetchWords(selectedWordTypeCode.value);
+    const remainingWordsSnapshot = await getDocs(
+      createWordsQuery(selectedWordTypeCode.value, true)
+    );
+    words.value = mapWords(remainingWordsSnapshot);
+
+    if (words.value.length === 0) {
+      await advanceLevel();
+      const hasReactivated = await reactivateInactiveWords();
+
+      if (hasReactivated) {
+        const reactivatedWordsSnapshot = await getDocs(
+          createWordsQuery(selectedWordTypeCode.value, true)
+        );
+        words.value = mapWords(reactivatedWordsSnapshot);
+      }
     }
   } finally {
+    stats.updateDayStreak();
+    const daysAdvancement = stats.getDayAdvancement();
+    if (daysAdvancement) {
+      toast.add({
+        severity: "success",
+        summary: "Advancement made!",
+        detail: daysAdvancement,
+        life: 6000,
+      });
+    }
     loading.value = false;
   }
-};
-
-const handleWordDoubleClick = (id: string) => {
-  showWordOperations.value = true;
-  selectedWordOperationsId.value = id;
 };
 
 const handleWordDelete = async (word: Word) => {
@@ -173,38 +307,58 @@ const handleWordDelete = async (word: Word) => {
     acceptProps: { label: "Delete", severity: "danger" },
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
-      await deleteDoc(doc(db, WORDS, word.id));
+      const deletePromises = [deleteDoc(doc(db, WORDS, word.id))];
 
-      const q = query(
+      const dictionaryQuery = query(
         collection(db, DICTIONARY),
         where("word", "==", word.word),
         where("meaning", "==", word.meaning)
       );
 
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(dictionaryQuery);
       if (!snapshot.empty) {
-        await deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id));
+        deletePromises.push(
+          deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id))
+        );
       }
+
+      await Promise.all(deletePromises);
 
       words.value = words.value.filter((w) => w.id !== word.id);
       checkedWordIds.value.delete(word.id);
+      stats.decreaseWordsLearned();
       showWordOperations.value = false;
     },
     reject: () => {},
   });
 };
 
-// const handleWordEdit = async (word: Word) => {};
-
 watch([selectedWordTypeCode, uid], ([type, user]) => {
-  if (type && user) fetchWords(type);
+  if (type && user) {
+    fetchWords(type);
+  }
 });
 
-watch(words, () => checkedWordIds.value.clear());
+watch(words, () => {
+  checkedWordIds.value.clear();
+});
 
 onMounted(() => {
   selectedWordType.value = WORD_TYPE_OPTIONS[0];
-  fetchLevel();
+
+  if (uid.value) {
+    fetchLevel();
+  }
+});
+
+watch(uid, (newUid) => {
+  if (newUid) {
+    levelDocId.value = null;
+    fetchLevel();
+  } else {
+    levelDocId.value = null;
+    level.value = undefined;
+  }
 });
 </script>
 
@@ -294,15 +448,13 @@ onMounted(() => {
             <div
               v-if="showWordOperations && word.id === selectedWordOperationsId"
             >
+              <ConfirmDialog></ConfirmDialog>
               <Button
                 icon="pi pi-trash"
                 severity="danger"
                 @click="handleWordDelete(word)"
               />
-              <Button
-                icon="pi pi-pencil"
-                severity="info"
-              />
+              <Button icon="pi pi-pencil" severity="info" />
             </div>
           </div>
         </div>

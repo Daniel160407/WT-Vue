@@ -4,7 +4,7 @@ import App from "./App.vue";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
 import "primeicons/primeicons.css";
-import { ToastService } from "primevue";
+import ToastService from "primevue/toastservice";
 import { createPinia } from "pinia";
 import Noir from "./presets/Noir";
 import router from "./composables/router";

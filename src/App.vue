@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Menubar } from "primevue";
+import Toast from "primevue/toast";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import {
@@ -69,6 +70,7 @@ const items = ref([
 <template>
   <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-[900px] lg:p-4">
     <Menubar :model="items" />
+    <Toast />
     <router-view />
   </div>
 </template>

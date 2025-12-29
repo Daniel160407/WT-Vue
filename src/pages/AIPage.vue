@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { GEMINI, USER } from "@/composables/constants";
-import type { MessageObj } from "@/type/interfaces";
+import type { MessageObj, MessageSender } from "@/type/interfaces";
 import { GoogleGenAI } from "@google/genai";
 import { Button, InputText, Message } from "primevue";
 import { ref, nextTick } from "vue";
@@ -8,6 +8,11 @@ import { ref, nextTick } from "vue";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
+import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useToast } from "primevue/usetoast";
+
+const stats = useStatisticsStore();
+const toast = useToast();
 
 const ai = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GOOGLE_AI_KEY,
@@ -22,7 +27,7 @@ const showScrollDown = ref(false);
 
 const messagesRef = collection(db, "messages");
 
-const createMessage = (sender: string, payload: string): MessageObj => ({
+const createMessage = (sender: MessageSender, payload: string): MessageObj => ({
   id: crypto.randomUUID(),
   sender,
   payload,
@@ -31,7 +36,7 @@ const createMessage = (sender: string, payload: string): MessageObj => ({
 
 const buildPromptWithHistory = () =>
   messages.value
-    .map((m) => `${m.sender === USER ? "User" : "Assistant"}: ${m.payload}`)
+    .map((m) => `${m.sender === USER ? "User" : "Gemini"}: ${m.payload}`)
     .join("\n");
 
 const submit = async () => {
@@ -61,6 +66,16 @@ const submit = async () => {
     );
   } finally {
     waitingForResponse.value = false;
+    stats.updateDayStreak();
+    const daysAdvancement = stats.getDayAdvancement();
+    if (daysAdvancement) {
+      toast.add({
+        severity: "success",
+        summary: "Advancement made!",
+        detail: daysAdvancement,
+        life: 6000,
+      });
+    }
     await scrollToBottom();
   }
 };
@@ -76,7 +91,7 @@ const saveConversation = async () => {
     });
   }
 
-  alert("Conversation saved to Firebase ✅");
+  alert("Conversation saved to Firebase");
 };
 
 const handleScroll = () => {

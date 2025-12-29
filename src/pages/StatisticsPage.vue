@@ -65,7 +65,7 @@ const fetchStatistics = async () => {
       id: doc.id,
       ...(doc.data() as Omit<Statistics, "id">),
     }));
-    
+
     wordsLearned.value = statistics[0]?.words_learned ?? 0;
     cyclesCompleted.value = statistics[0]?.cycles ?? 0;
     dayStreak.value = statistics[0]?.days ?? 0;
@@ -130,5 +130,18 @@ watch(
       <li>C1: {{ wordLevelContribution.C1 }}</li>
       <li>C2: {{ wordLevelContribution.C2 }}</li>
     </ul>
+  </div>
+  <div>
+    <h2>Your achievements</h2>
+    <div>
+      <div v-for="advancement in advancements" :key="advancement">
+        <div>
+          <i class="pi pi-crown"></i>
+        </div>
+        <div>
+          <p>{{ advancement }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
