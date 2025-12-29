@@ -154,7 +154,7 @@ const advanceLevel = async () => {
     await fetchLevel();
     await stats.increaseCycles();
 
-    const cyclesAdvancement = stats.getCyclesAdvancement();
+    const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
 
     if (cyclesAdvancement) {
       toast.add({
@@ -211,9 +211,9 @@ const fetchLevel = async (): Promise<void> => {
     if (currentLevel > 5) {
       await resetLevelAndDeleteWords();
       await fetchLevel();
-      stats.increaseCycles();
+      await stats.increaseCycles();
 
-      const cyclesAdvancement = stats.getCyclesAdvancement();
+      const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
       if (cyclesAdvancement) {
         toast.add({
           severity: "success",
@@ -286,8 +286,8 @@ const dropWords = async () => {
       }
     }
   } finally {
-    stats.updateDayStreak();
-    const daysAdvancement = stats.getDayAdvancement();
+    await stats.updateDayStreak();
+    const daysAdvancement = await stats.checkAndGetDayAdvancement();
     if (daysAdvancement) {
       toast.add({
         severity: "success",
@@ -302,8 +302,8 @@ const dropWords = async () => {
 
 const handleWordDelete = async (word: Word) => {
   confirm.require({
-    message: "Are you sure?",
-    header: "Delete",
+    message: "Are you sure with your decisions?",
+    header: "Delete word",
     acceptProps: { label: "Delete", severity: "danger" },
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
@@ -326,7 +326,7 @@ const handleWordDelete = async (word: Word) => {
 
       words.value = words.value.filter((w) => w.id !== word.id);
       checkedWordIds.value.delete(word.id);
-      stats.decreaseWordsLearned();
+      await stats.decreaseWordsLearned();
       showWordOperations.value = false;
     },
     reject: () => {},

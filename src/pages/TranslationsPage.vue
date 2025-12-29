@@ -138,7 +138,7 @@ const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
   }
 };
 
-const checkAnswers = () => {
+const checkAnswers = async () => {
   results.value = {};
 
   words.value.forEach((word) => {
@@ -152,7 +152,7 @@ const checkAnswers = () => {
   });
 
   stats.updateDayStreak();
-  const daysAdvancement = stats.getDayAdvancement();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement();
   if (daysAdvancement) {
     toast.add({
       severity: "success",

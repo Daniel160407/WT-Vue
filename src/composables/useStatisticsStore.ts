@@ -10,6 +10,7 @@ import {
   Timestamp,
   type QueryDocumentSnapshot,
   type DocumentData,
+  arrayUnion,
 } from "firebase/firestore";
 import { Advancements, STATISTICS, USER_ID } from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
@@ -28,9 +29,7 @@ export const useStatisticsStore = defineStore("statistics", {
 
   actions: {
     async fetchStatistics() {
-
       const { uid } = useAuth();
-      console.log(!uid.value);
       if (!uid.value) return null;
 
       this.loading = true;
@@ -118,76 +117,127 @@ export const useStatisticsStore = defineStore("statistics", {
       }
     },
 
-    getDayAdvancement(): Advancement | null {
+    async addAdvancement(advancement: Advancement) {
+      const doc = this.statDoc;
+      if (!doc) return;
+
+      await updateDoc(doc.ref, {
+        advancements: arrayUnion(advancement),
+      });
+    },
+
+    async checkAndGetDayAdvancement() {
       const days = this.data?.days;
+
+      let advancement: Advancement | null = null;
 
       switch (days) {
         case 1:
-          return Advancements.ONEDAYSTREAK;
+          advancement = Advancements.ONEDAYSTREAK;
+          break;
         case 3:
-          return Advancements.THREEDAYSTREAK;
+          advancement = Advancements.THREEDAYSTREAK;
+          break;
         case 7:
-          return Advancements.WEEKSTREAK;
+          advancement = Advancements.WEEKSTREAK;
+          break;
         case 14:
-          return Advancements.TWOWEEKSTREAK;
+          advancement = Advancements.TWOWEEKSTREAK;
+          break;
         case 21:
-          return Advancements.THREEWEEKSTREAK;
+          advancement = Advancements.THREEWEEKSTREAK;
+          break;
         case 30:
-          return Advancements.MONTHSTREAK;
+          advancement = Advancements.MONTHSTREAK;
+          break;
         case 60:
-          return Advancements.TWOMONTHSTREAK;
+          advancement = Advancements.TWOMONTHSTREAK;
+          break;
         case 180:
-          return Advancements.SIXMONTHSTREAK;
+          advancement = Advancements.SIXMONTHSTREAK;
+          break;
         case 365:
-          return Advancements.ONEYEARSTREAK;
+          advancement = Advancements.ONEYEARSTREAK;
+          break;
       }
-      return null;
+
+      if (advancement) {
+        await this.addAdvancement(advancement);
+        return advancement;
+      }
     },
 
-    getCyclesAdvancement(): Advancement | null {
+    async checkAndGetCyclesAdvancement() {
       const cycles = this.data?.cycles;
+
+      let advancement: Advancement | null = null;
 
       switch (cycles + 1) {
         case 1:
-          return Advancements.ONECYCLESTREAK;
+          advancement = Advancements.ONECYCLESTREAK;
+          break;
         case 5:
-          return Advancements.FIVECYCLESSTREAK;
+          advancement = Advancements.FIVECYCLESSTREAK;
+          break;
         case 10:
-          return Advancements.TENCYCLESSTREAK;
+          advancement = Advancements.TENCYCLESSTREAK;
+          break;
         case 20:
-          return Advancements.TWENTYCYCLESSTREAK;
+          advancement = Advancements.TWENTYCYCLESSTREAK;
+          break;
         case 30:
-          return Advancements.THIRTYCYCLESSTREAK;
+          advancement = Advancements.THIRTYCYCLESSTREAK;
+          break;
         case 50:
-          return Advancements.FIFTYCYCLESSTREAK;
+          advancement = Advancements.FIFTYCYCLESSTREAK;
+          break;
       }
-      return null;
+
+      if (advancement) {
+        await this.addAdvancement(advancement);
+        return advancement;
+      }
     },
 
-    getWordsAdvancement(): Advancement | null {
+    async checkAndGetWordsAdvancement() {
       const words = this.data?.words_learned;
+
+      let advancement: Advancement | null = null;
 
       switch (words) {
         case 10:
-          return Advancements.TENWORDS;
+          advancement = Advancements.TENWORDS;
+          break;
         case 50:
-          return Advancements.FIFTYWORDS;
+          advancement = Advancements.FIFTYWORDS;
+          break;
         case 100:
-          return Advancements.HUNDREDWORDS;
+          advancement = Advancements.HUNDREDWORDS;
+          break;
         case 300:
-          return Advancements.THREEHUNDREDWORDS;
+          advancement = Advancements.THREEHUNDREDWORDS;
+          break;
         case 500:
-          return Advancements.FIVEHUNDREDWORDS;
+          advancement = Advancements.FIVEHUNDREDWORDS;
+          break;
         case 700:
-          return Advancements.SEVENHUNDREDWORDS;
+          advancement = Advancements.SEVENHUNDREDWORDS;
+          break;
         case 1000:
-          return Advancements.THOUSANDWORDS;
+          advancement = Advancements.THOUSANDWORDS;
+          break;
         case 3000:
-          return Advancements.THREETHOUSANDWORDS;
+          advancement = Advancements.THREETHOUSANDWORDS;
+          break;
         case 5000:
-          return Advancements.FIVETHOUSANDWORDS;
+          advancement = Advancements.FIVETHOUSANDWORDS;
+          break;
       }
-      return null;
+
+      if (advancement) {
+        await this.addAdvancement(advancement);
+        return advancement;
+      }
     },
 
     reset() {

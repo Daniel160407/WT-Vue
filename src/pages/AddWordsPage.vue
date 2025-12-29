@@ -64,9 +64,9 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
   };
   await addDoc(collection(db, DICTIONARY), dictionaryWord);
 
-  stats.increaseWordsLearned();
-  stats.updateDayStreak();
-  const daysAdvancement = stats.getDayAdvancement();
+  await stats.increaseWordsLearned();
+  await stats.updateDayStreak();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement();
   if (daysAdvancement) {
     toast.add({
       severity: "success",
@@ -75,7 +75,7 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
       life: 6000,
     });
   }
-  const wordsAdvancement = stats.getWordsAdvancement();
+  const wordsAdvancement = await stats.checkAndGetWordsAdvancement();
   if (wordsAdvancement) {
     toast.add({
       severity: "success",

@@ -66,8 +66,8 @@ const submit = async () => {
     );
   } finally {
     waitingForResponse.value = false;
-    stats.updateDayStreak();
-    const daysAdvancement = stats.getDayAdvancement();
+    await stats.updateDayStreak();
+    const daysAdvancement = await stats.checkAndGetDayAdvancement();
     if (daysAdvancement) {
       toast.add({
         severity: "success",
