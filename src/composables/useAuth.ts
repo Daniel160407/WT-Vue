@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import router from "./router";
 import type { AppUser } from "@/type/interfaces";
 import Cookies from "js-cookie";
@@ -40,7 +40,7 @@ export function useAuth() {
         displayName: firebaseUser.displayName!,
         photoURL: firebaseUser.photoURL!,
         provider: firebaseUser.providerData[0]?.providerId,
-        createdAt: new Date(),
+        createdAt: Timestamp.fromDate(new Date()),
       };
 
       await setDoc(doc(db, USERS, firebaseUser.uid), appUser, {
