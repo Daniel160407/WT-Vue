@@ -28,6 +28,7 @@ export const LEVEL = "level";
 export const USERS = "users";
 export const DICTIONARY = "dictionary";
 export const STATISTICS = "statistics";
+export const MESSAGES = "messages";
 
 export const WORD_TYPE = "word_type";
 export const ACTIVE = "active";
@@ -97,8 +98,10 @@ export const DICTIONARY_CATEGORY = "dictionary";
 export const UID = "uid";
 export const NAME = "name";
 export const PHOTO_URL = "photoURL";
+export const WORD_LEVEL = "word_level";
 
 //AI
+export const GEMINI_MODEL = "gemini-2.5-flash";
 export const GEMINI = "gemini";
 export const USER = "user";
 

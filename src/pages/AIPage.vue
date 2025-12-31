@@ -1,82 +1,46 @@
 <script setup lang="ts">
-import { GEMINI, USER } from "@/composables/constants";
-import type { MessageObj, MessageSender } from "@/type/interfaces";
-import { GoogleGenAI } from "@google/genai";
-import { Button, InputText, Message } from "primevue";
 import { ref, nextTick } from "vue";
-
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+
+import { Button, InputText, Message } from "primevue";
+import { useToast } from "primevue/usetoast";
+
+import { GEMINI, MESSAGES } from "@/composables/constants";
 import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
 import { useStatisticsStore } from "@/composables/useStatisticsStore";
-import { useToast } from "primevue/usetoast";
+import { useGeminiChat } from "@/composables/useGeminiChat";
+
+const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 
 const stats = useStatisticsStore();
 const toast = useToast();
 
-const ai = new GoogleGenAI({
-  apiKey: import.meta.env.VITE_GOOGLE_AI_KEY,
-});
-
 const prompt = ref("");
-const messages = ref<MessageObj[]>([]);
-const waitingForResponse = ref(false);
 
 const chatContainer = ref<HTMLElement | null>(null);
 const showScrollDown = ref(false);
 
-const messagesRef = collection(db, "messages");
-
-const createMessage = (sender: MessageSender, payload: string): MessageObj => ({
-  id: crypto.randomUUID(),
-  sender,
-  payload,
-  created_at: Date.now(),
-});
-
-const buildPromptWithHistory = () =>
-  messages.value
-    .map((m) => `${m.sender === USER ? "User" : "Gemini"}: ${m.payload}`)
-    .join("\n");
+const messagesRef = collection(db, MESSAGES);
 
 const submit = async () => {
-  const userText = prompt.value.trim();
-  if (!userText) return;
+  if (!prompt.value.trim()) return;
 
-  const userMessage = createMessage(USER, userText);
-  messages.value.push(userMessage);
+  const text = prompt.value;
   prompt.value = "";
 
+  await sendMessage(text);
   await scrollToBottom();
 
-  try {
-    waitingForResponse.value = true;
-
-    const fullPrompt = buildPromptWithHistory() + `\nUser: ${userText}`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: fullPrompt,
+  await stats.updateDayStreak();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  if (daysAdvancement) {
+    toast.add({
+      severity: "success",
+      summary: "Advancement made!",
+      detail: daysAdvancement,
+      life: 6000,
     });
-
-    messages.value.push(createMessage(GEMINI, response.text ?? "No response"));
-  } catch {
-    messages.value.push(
-      createMessage(GEMINI, "Something went wrong. Please try again...")
-    );
-  } finally {
-    waitingForResponse.value = false;
-    await stats.updateDayStreak();
-    const daysAdvancement = await stats.checkAndGetDayAdvancement();
-    if (daysAdvancement) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: daysAdvancement,
-        life: 6000,
-      });
-    }
-    await scrollToBottom();
   }
 };
 
@@ -90,8 +54,6 @@ const saveConversation = async () => {
       created_at: message.created_at,
     });
   }
-
-  alert("Conversation saved to Firebase");
 };
 
 const handleScroll = () => {
@@ -142,14 +104,14 @@ const scrollToBottom = async () => {
       v-if="showScrollDown"
       icon="pi pi-arrow-down"
       rounded
-      class="!fixed bottom-20 right-4 shadow-lg z-50"
+      class="fixed! bottom-20 right-4 shadow-lg z-50"
       @click="scrollToBottom"
     />
 
     <div class="flex gap-2 p-2">
       <InputText
         v-model="prompt"
-        class="flex-1 !bg-[#444444] !border !border-gray-400 focus:!border-white text-white"
+        class="flex-1 bg-[#444444] !border! border-gray-400! focus:border-white! text-white"
         placeholder="Ask AI for exercises"
         @keyup.enter="submit"
       />
