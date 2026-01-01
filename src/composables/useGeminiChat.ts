@@ -49,6 +49,7 @@ export function useGeminiChat() {
         createMessage(GEMINI, "Server is busy. Please try again later...")
       );
     } finally {
+      console.log(messages);
       waitingForResponse.value = false;
     }
   };

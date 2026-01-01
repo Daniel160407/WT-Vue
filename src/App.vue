@@ -12,6 +12,8 @@ import {
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  SENTENCES_LABEL,
+  SENTENCES_ROUTE,
   STATISTICS_LABEL,
   STATISTICS_ROUTE,
   TESTS_LABEL,
@@ -41,6 +43,11 @@ const items = ref([
         label: TRANSLATIONS,
         icon: "pi pi-pen-to-square",
         command: () => router.push(TRANSLATIONS_ROUTE),
+      },
+      {
+        label: SENTENCES_LABEL,
+        icon: "pi pi-align-justify",
+        command: () => router.push(SENTENCES_ROUTE),
       },
       {
         label: AI,

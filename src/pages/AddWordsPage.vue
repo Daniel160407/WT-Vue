@@ -19,7 +19,7 @@ import {
 import {
   DICTIONARY,
   GEMINI,
-  WORD_LEVEL,
+  WORD_LEVEL_COOKIE,
   WORD_LEVEL_OPTIONS,
   WORD_TYPE_OPTIONS,
   WORDS,
@@ -41,8 +41,8 @@ const parsedAIWords = ref<Word[]>([]);
 const savingIndex = ref<number | null>(null);
 const selectedWordType = ref({ name: "Words", code: "word" });
 const selectedLevel = ref({
-  name: Cookies.get("word_level") ?? "A1",
-  code: Cookies.get("word_level") ?? "A1",
+  name: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
+  code: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
 });
 
 const formData = ref({
@@ -325,7 +325,7 @@ watch(waitingForResponse, () => {
                     optionLabel="name"
                     class="w-full"
                     @update:model-value="
-                      Cookies.set(WORD_LEVEL, selectedLevel.code, {
+                      Cookies.set(WORD_LEVEL_COOKIE, selectedLevel.code, {
                         expires: 7,
                       })
                     "
