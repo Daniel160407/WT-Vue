@@ -36,13 +36,7 @@ const words = ref<Word[]>([]);
 const sentences = ref<string[]>([]);
 const editedSentences = ref<string[]>([]);
 const answers = ref<string[]>([]);
-const correctAnswers = ref<string[]>([
-  "Sonne",
-  "Wasser",
-  "Frist",
-  "Baum",
-  "Blume",
-]);
+const correctAnswers = ref<string[]>([]);
 const shuffledCorrectAnswers = ref<string[]>([]);
 const areAnswersChecked = ref<boolean>(false);
 const showCorrectAnswers = ref<boolean>(false);
@@ -180,9 +174,6 @@ OUTPUT FORMAT:
   sentences.value = result;
   editedSentences.value = handleGeneratedSentencesEdit(result);
   answers.value = new Array(result.length).fill("");
-
-  console.log(sentences.value);
-  console.log(correctAnswers.value);
 };
 
 const shuffleArray = (array: any[]) => {
@@ -341,48 +332,57 @@ const handleCheckAnswers = () => {
       <div
         v-for="(sentence, i) in editedSentences"
         :key="i"
-        class="flex gap-2 mb-3 bg-[#333333] p-4 rounded-2xl items-center border border-[#646b79]"
+        class="mb-3 bg-[#333333] p-4 rounded-2xl border border-[#646b79]"
       >
-        <p>{{ i + 1 }}.</p>
-        <template v-for="(part, j) in splitSentence(sentence)" :key="j">
-          <template v-if="part.type === 'input'">
-            <div class="flex flex-col gap-1">
-              <IconField class="relative flex items-center">
-                <InputIcon
-                  v-if="areAnswersChecked"
-                  :class="[
-                    'absolute right-3 top-1/2 -translate-y-1/2 transition-colors',
-                    answers[part.index] === correctAnswers[part.index]
-                      ? 'pi pi-thumbs-up text-green-500!'
-                      : 'pi pi-thumbs-down text-red-500!',
-                  ]"
-                />
+        <div
+          class="flex flex-wrap items-baseline gap-x-2 gap-y-1 leading-relaxed"
+        >
+          <span class="font-medium">{{ i + 1 }}.</span>
 
-                <InputText
-                  v-model="answers[part.index]"
-                  class="w-32 pr-10 text-center"
-                />
-              </IconField>
+          <template v-for="(part, j) in splitSentence(sentence)" :key="j">
+            <template v-if="part.type === 'input'">
+              <div class="inline-flex flex-col gap-1 align-baseline">
+                <IconField class="relative inline-flex items-center">
+                  <InputIcon
+                    v-if="areAnswersChecked"
+                    :class="[
+                      'absolute right-2 top-1/2 -translate-y-1/2 text-sm',
+                      answers[part.index] === correctAnswers[part.index]
+                        ? 'pi pi-thumbs-up text-green-500!'
+                        : 'pi pi-thumbs-down text-red-500!',
+                    ]"
+                  />
 
-              <Message
-                v-if="
-                  answers[part.index] !== correctAnswers[part.index] &&
-                  showCorrectAnswers
-                "
-                severity="success"
-                size="small"
-                class="mt-1"
-              >
-                Correct: <strong>{{ correctAnswers[part.index] }}</strong>
-              </Message>
-            </div>
+                  <InputText
+                    v-model="answers[part.index]"
+                    class="w-28 sm:w-32 pr-8 text-center inline-block"
+                  />
+                </IconField>
+
+                <Message
+                  v-if="
+                    answers[part.index] !== correctAnswers[part.index] &&
+                    showCorrectAnswers
+                  "
+                  severity="success"
+                  size="small"
+                >
+                  Correct:
+                  <strong>{{ correctAnswers[part.index] }}</strong>
+                </Message>
+              </div>
+            </template>
+
+            <template v-else>
+              <span class="inline leading-relaxed">
+                {{ part.text }}
+              </span>
+            </template>
           </template>
-          <template v-else>
-            <span>{{ part.text }}</span>
-          </template>
-        </template>
+        </div>
       </div>
-      <div class="flex gap-4">
+
+      <div class="flex flex-wrap gap-4 mt-4">
         <Button label="Check Answers" @click="handleCheckAnswers" />
         <Button
           v-if="areAnswersChecked"
