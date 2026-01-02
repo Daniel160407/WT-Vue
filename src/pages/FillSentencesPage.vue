@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useAuth } from "@/composables/useAuth";
-import type { Word } from "@/type/interfaces";
+import type { SentencePart, Word } from "@/type/interfaces";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { db } from "../../firebase";
 import {
   ACTIVE,
   GEMINI,
   USER_ID,
   WORD_LEVEL_COOKIE,
+  WORD_LEVEL_OPTIONS,
   WORD_TYPE,
   WORDS,
   WORDS_CATEGORY,
@@ -25,35 +26,36 @@ import {
   InputNumber,
   InputText,
   Message,
+  Select,
 } from "primevue";
 
 const { uid } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 
 const words = ref<Word[]>([]);
-const sentences = ref<string[]>([
-  "Die rote **** duftet sehr schön im Garten.",
-  "Wir brauchen **** zum Trinken und Kochen.",
-  "Bitte beachten Sie, dass die **** zur Abgabe des Berichts morgen endet.",
-  "Die **** wärmt die Erde und lässt alles wachsen.",
-  "Im Herbst verlieren die Blätter vom **** ihre Farbe.",
-]);
+const sentences = ref<string[]>([]);
 const editedSentences = ref<string[]>([]);
 const answers = ref<string[]>([]);
-const correctAnswers = ref<string[]>([]);
+const correctAnswers = ref<string[]>([
+  "Sonne",
+  "Wasser",
+  "Frist",
+  "Baum",
+  "Blume",
+]);
+const shuffledCorrectAnswers = ref<string[]>([]);
 const areAnswersChecked = ref<boolean>(false);
 const showCorrectAnswers = ref<boolean>(false);
 
 const formData = ref({
   language: "",
-  level: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
+  level: {
+    name: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
+    code: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
+  },
   useExistingWords: true,
   quantity: 10,
 });
-
-type SentencePart =
-  | { type: "text"; text: string }
-  | { type: "input"; index: number };
 
 const fetchWords = async () => {
   if (!uid.value) return;
@@ -76,7 +78,9 @@ const fetchWords = async () => {
 const generateSentences = async () => {
   const prompt = formData.value.useExistingWords
     ? `
-You are a ${formData.value.language} language learning assistant.
+You are a ${formData.value.level.code} ${
+        formData.value.language
+      } language learning assistant.
 
 TASK:
 I will give you a list of words. Generate ONE sentence per word.
@@ -121,10 +125,10 @@ OUTPUT FORMAT:
 }
 `
     : `
-You are a ${formData.value.language} language learning assistant.
+You are a ${formData.value.level.code} ${formData.value.language} language learning assistant.
 
 TASK:
-1. Generate 10 ${formData.value.level} words
+1. Generate ${formData.value.quantity} ${formData.value.level} words
 2. For each word, generate ONE sentence with exactly ONE missing word
 3. Replace the missing word with ****
 
@@ -139,6 +143,7 @@ OUTPUT RULES:
 - Return ONLY valid JSON
 - No explanations
 - No markdown
+- No numbering
 
 OUTPUT FORMAT:
 {
@@ -170,6 +175,7 @@ OUTPUT FORMAT:
     ? payloadObj.sentences
     : [];
   correctAnswers.value = payloadObj.words;
+  shuffledCorrectAnswers.value = shuffleArray(correctAnswers.value);
 
   sentences.value = result;
   editedSentences.value = handleGeneratedSentencesEdit(result);
@@ -177,6 +183,15 @@ OUTPUT FORMAT:
 
   console.log(sentences.value);
   console.log(correctAnswers.value);
+};
+
+const shuffleArray = (array: any[]) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
 };
 
 const handleGeneratedSentencesEdit = (sentences: string[]) => {
@@ -203,18 +218,18 @@ const splitSentence = (sentence: string): SentencePart[] => {
   ];
 };
 
-const resolver = (values: any) => {
+const resolver = () => {
   const errors: Record<string, { message: string }[]> = {};
 
-  if (!values.language) {
+  if (!formData.value.language) {
     errors.language = [{ message: "Language is required." }];
   }
 
-  if (!values.level) {
+  if (!formData.value.level) {
     errors.level = [{ message: "Level is required." }];
   }
 
-  if (!values.quantity) {
+  if (!formData.value.quantity) {
     errors.quantity = [{ message: "Quantity is required." }];
   }
 
@@ -235,61 +250,94 @@ const handleCheckAnswers = () => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold">Fill the Sentences</h1>
+    <div class="flex justify-center items-center flex-col">
+      <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
+        Fill the Sentences
+      </h1>
 
-    <Form
-      v-slot="$form"
-      :formData
-      :resolver
-      :validateOnValueUpdate="false"
-      :validateOnBlur="true"
-      @submit="onFormSubmit"
-      class="flex flex-col gap-4 w-full sm:w-80"
-    >
-      <div>
-        <FloatLabel variant="on">
-          <InputText v-model="formData.language" name="language" />
-          <label>Language</label>
-        </FloatLabel>
-        <Message v-if="$form.language?.invalid" severity="error" size="small">
-          {{ $form.language.error.message }}
-        </Message>
-      </div>
+      <Form
+        v-slot="$form"
+        :formData
+        :resolver
+        :validateOnValueUpdate="false"
+        :validateOnBlur="true"
+        @submit="onFormSubmit"
+        class="flex flex-col gap-4 w-full sm:w-80"
+      >
+        <div>
+          <FloatLabel variant="on">
+            <InputText
+              v-model="formData.language"
+              name="language"
+              class="w-full"
+            />
+            <label>Language</label>
+          </FloatLabel>
+          <Message
+            v-if="$form.language?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+          >
+            {{ $form.language.error.message }}
+          </Message>
+        </div>
 
-      <div>
-        <FloatLabel variant="on">
-          <InputText v-model="formData.level" name="level" />
-          <label>Level</label>
-        </FloatLabel>
-        <Message v-if="$form.level?.invalid" severity="error" size="small">
-          {{ $form.level.error.message }}
-        </Message>
-      </div>
+        <div>
+          <FloatLabel variant="on">
+            <Select
+              v-model="formData.level"
+              name="level"
+              optionLabel="name"
+              :options="WORD_LEVEL_OPTIONS"
+              class="w-full"
+            />
+            <label>Level</label>
+          </FloatLabel>
+        </div>
 
-      <div>
-        <FloatLabel variant="on">
-          <InputNumber v-model="formData.quantity" name="quantity" />
-          <label>Quantity</label>
-        </FloatLabel>
-        <Message v-if="$form.quantity?.invalid" severity="error" size="small">
-          {{ $form.quantity.error.message }}
-        </Message>
-      </div>
+        <div v-if="!formData.useExistingWords">
+          <FloatLabel variant="on">
+            <InputNumber
+              v-model="formData.quantity"
+              name="quantity"
+              class="w-full"
+            />
+            <label>Quantity</label>
+          </FloatLabel>
+          <Message
+            v-if="$form.quantity?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+          >
+            {{ $form.quantity.error.message }}
+          </Message>
+        </div>
 
-      <div class="flex items-center gap-2">
-        <Checkbox v-model="formData.useExistingWords" binary />
-        <span>Use my words</span>
-      </div>
+        <div class="flex items-center gap-2">
+          <Checkbox v-model="formData.useExistingWords" binary />
+          <span>Use my words</span>
+        </div>
 
-      <Button type="submit" label="Generate" />
-    </Form>
-
+        <Button type="submit" label="Generate" :loading="waitingForResponse" />
+      </Form>
+    </div>
     <div v-if="editedSentences.length && !waitingForResponse">
-      <div class="flex gap-6">
-        <div v-for="(word, i) in words" :key="i">
-          <p>{{ i + 1 }}. {{ word.word }}</p>
+      <div class="mb-3 bg-[#333333] p-4 rounded-2xl border border-[#646b79]">
+        <div
+          class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        >
+          <div
+            v-for="(word, i) in shuffledCorrectAnswers"
+            :key="i"
+            class="bg-[#444444] p-3 rounded-2xl border border-[#646b79] text-center"
+          >
+            <p class="wrap-break-word">{{ i + 1 }}. {{ word }}</p>
+          </div>
         </div>
       </div>
+
       <div
         v-for="(sentence, i) in editedSentences"
         :key="i"
@@ -334,7 +382,7 @@ const handleCheckAnswers = () => {
           </template>
         </template>
       </div>
-      <div>
+      <div class="flex gap-4">
         <Button label="Check Answers" @click="handleCheckAnswers" />
         <Button
           v-if="areAnswersChecked"

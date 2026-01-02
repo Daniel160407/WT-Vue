@@ -18,6 +18,10 @@ export type LevelStats = Record<WordLevel, number>;
 
 export type Advancement = (typeof Advancements)[keyof typeof Advancements];
 
+export type SentencePart =
+  | { type: "text"; text: string }
+  | { type: "input"; index: number };
+
 export interface Word {
   id: string;
   word: string;
