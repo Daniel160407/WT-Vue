@@ -12,6 +12,8 @@ import {
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  SENTENCES_LABEL,
+  SENTENCES_ROUTE,
   STATISTICS_LABEL,
   STATISTICS_ROUTE,
   TESTS_LABEL,
@@ -43,6 +45,11 @@ const items = ref([
         command: () => router.push(TRANSLATIONS_ROUTE),
       },
       {
+        label: SENTENCES_LABEL,
+        icon: "pi pi-align-justify",
+        command: () => router.push(SENTENCES_ROUTE),
+      },
+      {
         label: AI,
         icon: "pi pi-microchip-ai",
         command: () => router.push(AI_ROUTE),
@@ -68,7 +75,7 @@ const items = ref([
 </script>
 
 <template>
-  <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-[900px] lg:p-4">
+  <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-225 lg:p-4">
     <Menubar :model="items" />
     <Toast />
     <router-view />

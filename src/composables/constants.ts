@@ -9,6 +9,7 @@ export const HOME_LABEL = "Words";
 export const ADD_WORDS_LABEL = "Add Words";
 export const TESTS_LABEL = "Tests";
 export const TRANSLATIONS = "Translations";
+export const SENTENCES_LABEL = "Sentences";
 export const AI = "AI";
 export const DICTIONARY_LABEL = "Dictionary";
 export const STATISTICS_LABEL = "Statistics";
@@ -17,6 +18,7 @@ export const STATISTICS_LABEL = "Statistics";
 export const WORDS_ROUTE = "/words";
 export const ADD_WORDS_ROUTE = "/add";
 export const TRANSLATIONS_ROUTE = "/translations";
+export const SENTENCES_ROUTE = "/sentences";
 export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
 export const STATISTICS_ROUTE = "/statistics";
@@ -28,6 +30,7 @@ export const LEVEL = "level";
 export const USERS = "users";
 export const DICTIONARY = "dictionary";
 export const STATISTICS = "statistics";
+export const MESSAGES = "messages";
 
 export const WORD_TYPE = "word_type";
 export const ACTIVE = "active";
@@ -97,8 +100,10 @@ export const DICTIONARY_CATEGORY = "dictionary";
 export const UID = "uid";
 export const NAME = "name";
 export const PHOTO_URL = "photoURL";
+export const WORD_LEVEL_COOKIE = "word_level";
 
 //AI
+export const GEMINI_MODEL = "gemini-2.5-flash";
 export const GEMINI = "gemini";
 export const USER = "user";
 

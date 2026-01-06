@@ -442,7 +442,7 @@ watch(uid, (newUid) => {
                 variant="text"
                 rounded
                 @click="toggleWordExamples(word.id)"
-                class="hover:text-[#ffc107] !text-[#ffc107]"
+                class="hover:text-[#ffc107] text-[#ffc107]!"
               />
             </div>
             <div
@@ -464,7 +464,7 @@ watch(uid, (newUid) => {
             label="Drop"
             :loading="loading"
             severity="warn"
-            class="!bg-[#ffc107] !border-[#ffc107] !text-black w-full !text-xl"
+            class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-xl!"
             @click="dropWords"
           />
         </div>
