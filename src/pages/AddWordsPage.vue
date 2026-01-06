@@ -207,12 +207,18 @@ const handleAIResponse = () => {
     if (message.sender === GEMINI) {
       try {
         parsedAIWords.value = JSON.parse(message.payload);
-      } catch (error) {
-        console.error("Invalid AI JSON:", error);
+      } catch {
         parsedAIWords.value = [];
       }
     }
   }
+};
+
+const generateExamples = async () => {
+  const prompt = `Generate 3 example sentences in ${formData.value.level}, where the word: ${formData.value.word} is used, one per line, without any extra text`;
+  await sendMessage(prompt);
+  const examples = messages.value[messages.value.length - 1]?.payload;
+  formData.value.example = examples ?? "";
 };
 
 watch(selectedWordType, (v) => (formData.value.word_type = v.code));
@@ -305,6 +311,13 @@ watch(waitingForResponse, () => {
                 >
                   {{ $form.example.error.message }}
                 </Message>
+                <Button
+                  label="Generate Examples"
+                  :loading="waitingForResponse"
+                  severity="warn"
+                  class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
+                  @click="generateExamples"
+                />
               </div>
 
               <div class="flex gap-4">
