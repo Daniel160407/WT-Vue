@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Form } from "@primevue/forms";
-import { useToast } from "primevue/usetoast";
 import {
   Button,
   FloatLabel,
@@ -17,25 +16,21 @@ import {
   Textarea,
 } from "primevue";
 import {
-  DICTIONARY,
   GEMINI,
   WORD_LEVEL_COOKIE,
   WORD_LEVEL_OPTIONS,
   WORD_TYPE_OPTIONS,
-  WORDS,
+  WORDS_CATEGORY,
 } from "@/composables/constants";
 import Cookies from "js-cookie";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebase";
-import { useStatisticsStore } from "@/composables/useStatisticsStore";
 import { useGeminiChat } from "@/composables/useGeminiChat";
-import type { Word } from "@/type/interfaces";
+import type { Word, WordForm } from "@/type/interfaces";
 import { useAuth } from "@/composables/useAuth";
+import { useAddWordsCrud } from "@/composables/useAddWordsCrud";
 
-const stats = useStatisticsStore();
-const toast = useToast();
 const { uid } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
+const { saving, addWord, addAIWord } = useAddWordsCrud();
 
 const parsedAIWords = ref<Word[]>([]);
 const savingIndex = ref<number | null>(null);
@@ -76,59 +71,15 @@ const resolver = ({ values }: { values: any }) => {
 const onFormSubmit = async ({ valid }: { valid: boolean }) => {
   if (!valid || !uid.value) return;
 
-  try {
-    const payload = {
-      ...formData.value,
-      user_id: uid.value,
-    };
+  const payload: WordForm = {
+    ...formData.value,
+    user_id: uid.value,
+  };
+  await addWord(payload);
 
-    await addDoc(collection(db, WORDS), payload);
-
-    await addDoc(collection(db, DICTIONARY), {
-      word: payload.word,
-      meaning: payload.meaning,
-      example: payload.example,
-      level: payload.level,
-      user_id: payload.user_id,
-      language_id: payload.language_id,
-    });
-
-    await stats.increaseWordsLearned();
-    await stats.updateDayStreak();
-
-    const dayAdv = await stats.checkAndGetDayAdvancement();
-    if (dayAdv) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: dayAdv,
-        life: 6000,
-      });
-    }
-
-    const wordAdv = await stats.checkAndGetWordsAdvancement();
-    if (wordAdv) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: wordAdv,
-        life: 6000,
-      });
-    }
-
-    formData.value.word = "";
-    formData.value.meaning = "";
-    formData.value.example = "";
-  } catch (error) {
-    console.error(error);
-
-    toast.add({
-      severity: "error",
-      summary: "Save failed",
-      detail: "Could not save the word. Please try again.",
-      life: 4000,
-    });
-  }
+  formData.value.word = "";
+  formData.value.meaning = "";
+  formData.value.example = "";
 };
 
 const onAIFormSubmit = async () => {
@@ -137,69 +88,20 @@ const onAIFormSubmit = async () => {
 };
 
 const onAIWordSave = async (word: Word, index: number) => {
-  try {
-    savingIndex.value = index;
+  savingIndex.value = index;
+  const basePayload = {
+    word: word.word.trim(),
+    meaning: word.meaning.trim(),
+    example: "",
+    level: selectedLevel.value.code,
+    word_type: WORDS_CATEGORY,
+    active: true,
+    user_id: uid.value ?? "",
+    language_id: Cookies.get("language_id") ?? "",
+  };
+  await addAIWord(basePayload);
 
-    const basePayload = {
-      word: word.word.trim(),
-      meaning: word.meaning.trim(),
-      example: "",
-      level: selectedLevel.value.code,
-      user_id: uid.value,
-      language_id: Cookies.get("language_id") ?? "",
-    };
-
-    await addDoc(collection(db, WORDS), {
-      ...basePayload,
-      word_type: "word",
-      active: true,
-    });
-
-    await addDoc(collection(db, DICTIONARY), basePayload);
-
-    await stats.increaseWordsLearned();
-    await stats.updateDayStreak();
-
-    const dayAdv = await stats.checkAndGetDayAdvancement();
-    if (dayAdv) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: dayAdv,
-        life: 6000,
-      });
-    }
-
-    const wordAdv = await stats.checkAndGetWordsAdvancement();
-    if (wordAdv) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: wordAdv,
-        life: 6000,
-      });
-    }
-
-    parsedAIWords.value.splice(index, 1);
-
-    toast.add({
-      severity: "success",
-      summary: "Word saved",
-      detail: `"${word.word}" was added successfully`,
-      life: 3000,
-    });
-  } catch (error) {
-    console.error(error);
-
-    toast.add({
-      severity: "error",
-      summary: "Save failed",
-      detail: "Could not save the word. Please try again.",
-      life: 4000,
-    });
-  } finally {
-    savingIndex.value = null;
-  }
+  parsedAIWords.value.splice(index, 1);
 };
 
 const handleAIResponse = () => {
@@ -347,7 +249,7 @@ watch(waitingForResponse, () => {
                 </FloatLabel>
               </div>
 
-              <Button type="submit" label="Save" />
+              <Button type="submit" label="Save" :loading="saving" />
             </Form>
           </TabPanel>
 
@@ -444,7 +346,7 @@ watch(waitingForResponse, () => {
                   label="Save"
                   icon="pi pi-check"
                   class="ml-auto"
-                  :loading="savingIndex === index"
+                  :loading="saving"
                   @click="onAIWordSave(word, index)"
                 />
               </div>
