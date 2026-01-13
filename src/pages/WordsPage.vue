@@ -9,6 +9,7 @@ import {
   getDocs,
   increment,
   query,
+  updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
@@ -25,7 +26,14 @@ import {
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import { ConfirmDialog, ProgressSpinner } from "primevue";
+import {
+  ConfirmDialog,
+  Dialog,
+  FloatLabel,
+  InputText,
+  ProgressSpinner,
+  Textarea,
+} from "primevue";
 import { useToast } from "primevue/usetoast";
 import { useAuth } from "@/composables/useAuth";
 import { useStatisticsStore } from "@/composables/useStatisticsStore";
@@ -43,9 +51,12 @@ const selectedWordType = ref<{ name: string; code: string }>();
 const expandedWordId = ref<string | null>(null);
 const checkedWordIds = ref<Set<string>>(new Set());
 const showWordOperations = ref(false);
+const showWordEditModal = ref(false);
 const selectedWordOperationsId = ref<string>("");
 
 const selectedWordTypeCode = computed(() => selectedWordType.value?.code);
+
+const editingWord = ref<Word | null>(null);
 
 const allWordsChecked = computed({
   get: () =>
@@ -76,7 +87,7 @@ const toggleWordCheck = (wordId: string, checked: boolean) => {
 };
 
 const handleWordDoubleClick = (id: string) => {
-  showWordOperations.value = true;
+  showWordOperations.value = !showWordOperations.value;
   selectedWordOperationsId.value = id;
 };
 
@@ -333,6 +344,27 @@ const handleWordDelete = async (word: Word) => {
   });
 };
 
+const handleWordEdit = (word: Word) => {
+  showWordEditModal.value = true;
+  editingWord.value = { ...word };
+};
+
+const saveWordEdit = async (word: Word) => {
+  loading.value = true;
+  try {
+    const wordRef = doc(db, WORDS, word.id);
+    const { id, ...updateData } = word;
+    await updateDoc(wordRef, updateData);
+    const wordType = selectedWordType.value?.code ?? "";
+    await fetchWords(wordType);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
+    showWordEditModal.value = false;
+  }
+};
+
 watch([selectedWordTypeCode, uid], ([type, user]) => {
   if (type && user) {
     fetchWords(type);
@@ -364,13 +396,13 @@ watch(uid, (newUid) => {
 
 <template>
   <div class="flex flex-col justify-start items-center min-h-screen w-full">
-    <div class="mt-10 max-w-3xl w-full p-2 bg-[#333333] rounded-2xl shadow-lg">
+    <div class="mt-10 max-w-3xl w-full p-5 bg-[#333333] rounded-2xl shadow-lg">
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Level {{ level?.level }}
       </h1>
 
       <div
-        class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6"
+        class="flex md:flex-row md:justify-between md:items-center gap-4 mb-6"
       >
         <Select
           v-model="selectedWordType"
@@ -379,16 +411,18 @@ watch(uid, (newUid) => {
           placeholder="Select word type"
           checkmark
           :highlightOnSelect="false"
-          class="w-full md:w-56"
+          class="w-full flex-1 md:flex-0"
         />
         <div class="flex items-center gap-2 text-white">
-          <Checkbox
-            v-model="allWordsChecked"
-            binary
-            :disabled="words.length === 0"
-            class="text-yellow-400"
-          />
-          <span class="text-sm font-medium">Select All</span>
+          <label class="text-sm font-medium">
+            <Checkbox
+              v-model="allWordsChecked"
+              binary
+              :disabled="words.length === 0"
+              class="text-yellow-400 flex-1"
+            />
+            Select All
+          </label>
         </div>
       </div>
 
@@ -414,7 +448,7 @@ watch(uid, (newUid) => {
             class="bg-[#444444] rounded-xl p-4 border border-gray-500 flex justify-center md:flex-row md:items-center gap-3 hover:bg-[#555] transition-colors duration-300"
           >
             <div class="flex flex-col justify-center items-center w-full">
-              <p class="text-[40px]">
+              <p class="text-[40px] text-center">
                 {{ word.word }} -
                 <span>{{ word.meaning }}</span>
               </p>
@@ -434,7 +468,9 @@ watch(uid, (newUid) => {
                 binary
                 variant="filled"
                 :modelValue="checkedWordIds.has(word.id)"
-                @update:modelValue="(isChecked: boolean) => toggleWordCheck(word.id, isChecked)"
+                @update:modelValue="
+                  (isChecked: boolean) => toggleWordCheck(word.id, isChecked)
+                "
               />
               <Button
                 icon="pi pi-lightbulb"
@@ -447,14 +483,23 @@ watch(uid, (newUid) => {
             </div>
             <div
               v-if="showWordOperations && word.id === selectedWordOperationsId"
+              class="flex flex-col"
             >
               <ConfirmDialog></ConfirmDialog>
               <Button
                 icon="pi pi-trash"
                 severity="danger"
+                variant="text"
+                rounded
                 @click="handleWordDelete(word)"
               />
-              <Button icon="pi pi-pencil" severity="info" />
+              <Button
+                icon="pi pi-pencil"
+                variant="text"
+                severity="info"
+                rounded
+                @click="handleWordEdit(word)"
+              />
             </div>
           </div>
         </div>
@@ -471,4 +516,53 @@ watch(uid, (newUid) => {
       </div>
     </div>
   </div>
+  <Dialog
+    v-model:visible="showWordEditModal"
+    modal
+    header="Edit word"
+    class="w-full max-w-md mx-3"
+  >
+    <div v-if="editingWord" class="space-y-4">
+      <div class="flex flex-col gap-2">
+        <FloatLabel variant="in">
+          <InputText v-model="editingWord.word" class="w-full" />
+          <label>Word</label>
+        </FloatLabel>
+        <FloatLabel variant="in">
+          <InputText v-model="editingWord.meaning" class="w-full" />
+          <label>Meaning</label>
+        </FloatLabel>
+        <FloatLabel variant="in">
+          <Textarea v-model="editingWord.example" class="w-full" />
+          <label>Examples</label>
+        </FloatLabel>
+        <FloatLabel variant="in">
+          <Select
+            v-model="editingWord.word_type"
+            :options="WORD_TYPE_OPTIONS"
+            optionLabel="name"
+            option-value="code"
+            checkmark
+            :highlightOnSelect="false"
+            class="w-full"
+          />
+          <label>Word Category</label>
+        </FloatLabel>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <Button
+          label="Cancel"
+          severity="secondary"
+          outlined
+          @click="showWordEditModal = false"
+        />
+        <Button
+          label="Save"
+          :loading="loading"
+          @click="saveWordEdit(editingWord)"
+        />
+      </div>
+    </div>
+  </Dialog>
 </template>

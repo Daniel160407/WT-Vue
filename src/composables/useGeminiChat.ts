@@ -44,7 +44,8 @@ export function useGeminiChat() {
       messages.value.push(
         createMessage(GEMINI, response.text ?? "No response")
       );
-    } catch {
+    } catch (err) {
+      console.error(err);
       messages.value.push(
         createMessage(GEMINI, "Server is busy. Please try again later...")
       );
