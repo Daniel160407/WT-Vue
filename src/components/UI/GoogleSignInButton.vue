@@ -21,7 +21,7 @@ const { user, error, signInWithGoogle, logout } = useAuth();
       v-else
       class="flex w-full flex-wrap items-center justify-between gap-3"
     >
-      <Button label="გამოსვლა" severity="danger" @click="logout" />
+      <Button label="Log out" severity="danger" @click="logout" />
     </div>
   </div>
 </template>

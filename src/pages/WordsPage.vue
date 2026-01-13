@@ -87,7 +87,7 @@ const toggleWordCheck = (wordId: string, checked: boolean) => {
 };
 
 const handleWordDoubleClick = (id: string) => {
-  showWordOperations.value = true;
+  showWordOperations.value = !showWordOperations.value;
   selectedWordOperationsId.value = id;
 };
 
@@ -396,13 +396,13 @@ watch(uid, (newUid) => {
 
 <template>
   <div class="flex flex-col justify-start items-center min-h-screen w-full">
-    <div class="mt-10 max-w-3xl w-full p-2 bg-[#333333] rounded-2xl shadow-lg">
+    <div class="mt-10 max-w-3xl w-full p-5 bg-[#333333] rounded-2xl shadow-lg">
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Level {{ level?.level }}
       </h1>
 
       <div
-        class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6"
+        class="flex md:flex-row md:justify-between md:items-center gap-4 mb-6"
       >
         <Select
           v-model="selectedWordType"
@@ -411,16 +411,18 @@ watch(uid, (newUid) => {
           placeholder="Select word type"
           checkmark
           :highlightOnSelect="false"
-          class="w-full md:w-56"
+          class="w-full flex-1 md:flex-0"
         />
         <div class="flex items-center gap-2 text-white">
-          <Checkbox
-            v-model="allWordsChecked"
-            binary
-            :disabled="words.length === 0"
-            class="text-yellow-400"
-          />
-          <span class="text-sm font-medium">Select All</span>
+          <label class="text-sm font-medium">
+            <Checkbox
+              v-model="allWordsChecked"
+              binary
+              :disabled="words.length === 0"
+              class="text-yellow-400 flex-1"
+            />
+            Select All
+          </label>
         </div>
       </div>
 
@@ -446,7 +448,7 @@ watch(uid, (newUid) => {
             class="bg-[#444444] rounded-xl p-4 border border-gray-500 flex justify-center md:flex-row md:items-center gap-3 hover:bg-[#555] transition-colors duration-300"
           >
             <div class="flex flex-col justify-center items-center w-full">
-              <p class="text-[40px]">
+              <p class="text-[40px] text-center">
                 {{ word.word }} -
                 <span>{{ word.meaning }}</span>
               </p>
@@ -481,6 +483,7 @@ watch(uid, (newUid) => {
             </div>
             <div
               v-if="showWordOperations && word.id === selectedWordOperationsId"
+              class="flex flex-col"
             >
               <ConfirmDialog></ConfirmDialog>
               <Button

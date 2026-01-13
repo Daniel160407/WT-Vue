@@ -419,6 +419,7 @@ watch(waitingForResponse, () => {
               <Button
                 type="submit"
                 label="Generate"
+                class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
                 :loading="waitingForResponse"
               />
             </Form>
