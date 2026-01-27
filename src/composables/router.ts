@@ -19,6 +19,7 @@ import StatisticsPage from "@/pages/StatisticsPage.vue";
 import FillSentencesPage from "@/pages/FillSentencesPage.vue";
 
 const routes = [
+  { path: "/", redirect: WORDS_ROUTE },
   { path: WORDS_ROUTE, component: WordsPage },
   { path: ADD_WORDS_ROUTE, component: AddWordsPage },
   { path: TRANSLATIONS_ROUTE, component: TranslationsPage },

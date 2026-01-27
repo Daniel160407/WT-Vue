@@ -77,3 +77,14 @@ export interface Statistics {
   user_id: string;
   language_id: Language;
 }
+
+export interface WordForm {
+  word: string;
+  meaning: string;
+  example: string;
+  word_type: string;
+  level: string;
+  active: boolean;
+  user_id: string;
+  language_id: string;
+}
