@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Menubar } from "primevue";
 import Toast from "primevue/toast";
-import { ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   ADD_WORDS_LABEL,
@@ -21,8 +21,12 @@ import {
   TRANSLATIONS_ROUTE,
   WORDS_ROUTE,
 } from "./composables/constants";
+import { useGlobalStore } from "./stores/GlobalStore";
+import { useAuth } from "./composables/useAuth";
 
 const router = useRouter();
+const { setData } = useGlobalStore();
+const { uid } = useAuth();
 
 const items = ref([
   {
@@ -72,6 +76,16 @@ const items = ref([
     command: () => router.push(AUTH_ROUTE),
   },
 ]);
+
+watch(
+  () => uid.value,
+  (newUid) => {
+    if (newUid) {
+      setData(); // Re-fetch when user becomes available
+    }
+  },
+  { immediate: true } // Also runs on mount
+);
 </script>
 
 <template>

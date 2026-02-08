@@ -30,7 +30,7 @@ import type {
   Word,
   WordCategory,
 } from "@/type/interfaces";
-import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue/usetoast";
 
 const { uid } = useAuth();

@@ -36,16 +36,18 @@ import {
 } from "primevue";
 import { useToast } from "primevue/usetoast";
 import { useAuth } from "@/composables/useAuth";
-import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useConfirm } from "primevue/useconfirm";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
-const { uid, loading: authLoading } = useAuth();
+const { uid } = useAuth();
 const stats = useStatisticsStore();
 const confirm = useConfirm();
 const toast = useToast();
+const { words, level } = storeToRefs(useGlobalStore());
+const { fetchWords, fetchLevel } = useGlobalStore();
 
-const words = ref<Word[]>([]);
-const level = ref<Level>();
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>();
 const expandedWordId = ref<string | null>(null);
@@ -202,69 +204,6 @@ const reactivateInactiveWords = async (): Promise<boolean> => {
   return true;
 };
 
-const fetchLevel = async (): Promise<void> => {
-  if (!uid.value) {
-    level.value = undefined;
-    return;
-  }
-
-  loading.value = true;
-
-  try {
-    const levelDoc = await getLevelDocument();
-    if (!levelDoc) {
-      level.value = undefined;
-      return;
-    }
-
-    const currentLevel = levelDoc.data.level ?? 1;
-
-    if (currentLevel > 5) {
-      await resetLevelAndDeleteWords();
-      await fetchLevel();
-      await stats.increaseCycles();
-
-      const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
-      if (cyclesAdvancement) {
-        toast.add({
-          severity: "success",
-          summary: "New cycles streak!",
-          detail: cyclesAdvancement,
-          life: 6000,
-        });
-      }
-      return;
-    }
-
-    levelDocId.value = levelDoc.id;
-
-    level.value = {
-      id: levelDoc.id,
-      ...(levelDoc.data as Omit<Level, "id">),
-    };
-  } finally {
-    loading.value = false;
-  }
-};
-
-const fetchWords = async (wordType: string) => {
-  if (authLoading.value || !uid.value) return;
-
-  loading.value = true;
-
-  try {
-    const snapshot = await getDocs(createWordsQuery(wordType, true));
-    words.value = mapWords(snapshot);
-    expandedWordId.value = null;
-
-    if (!levelDocId.value) {
-      await fetchLevel();
-    }
-  } finally {
-    loading.value = false;
-  }
-};
-
 const dropWords = async () => {
   if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
     return;
@@ -353,7 +292,7 @@ const saveWordEdit = async (word: Word) => {
   loading.value = true;
   try {
     const wordRef = doc(db, WORDS, word.id);
-    const { id, ...updateData } = word;
+    const { ...updateData } = word;
     await updateDoc(wordRef, updateData);
     const wordType = selectedWordType.value?.code ?? "";
     await fetchWords(wordType);
@@ -377,10 +316,6 @@ watch(words, () => {
 
 onMounted(() => {
   selectedWordType.value = WORD_TYPE_OPTIONS[0];
-
-  if (uid.value) {
-    fetchLevel();
-  }
 });
 
 watch(uid, (newUid) => {
@@ -389,7 +324,6 @@ watch(uid, (newUid) => {
     fetchLevel();
   } else {
     levelDocId.value = null;
-    level.value = undefined;
   }
 });
 </script>

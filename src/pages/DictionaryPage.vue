@@ -1,34 +1,17 @@
 <script setup lang="ts">
-import { collection, getDocs, query, where } from "firebase/firestore";
 import { FloatLabel, InputText } from "primevue";
-import { onMounted, ref, watch, computed } from "vue";
-import { db } from "../../firebase";
-import { DICTIONARY, USER_ID } from "@/composables/constants";
+import { ref, watch, computed } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import type { DictionaryWord } from "@/type/interfaces";
-
-const searchQuery = ref("");
-const words = ref<DictionaryWord[]>([]);
-const expandedWordId = ref<string | null>(null);
+import { useGlobalStore } from "@/stores/GlobalStore";
+import { storeToRefs } from "pinia";
 
 const { uid } = useAuth();
+const { dictionaryWords } = storeToRefs(useGlobalStore());
+const { fetchDictionaryWords } = useGlobalStore();
 
-const fetchWords = async () => {
-  if (!uid.value) return;
-
-  try {
-    const snapshot = await getDocs(
-      query(collection(db, DICTIONARY), where(USER_ID, "==", uid.value))
-    );
-
-    words.value = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<DictionaryWord, "id">),
-    }));
-  } catch (err) {
-    console.error("Failed to fetch words:", err);
-  }
-};
+const searchQuery = ref("");
+const expandedWordId = ref<string | null>(null);
 
 const toggleExample = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
@@ -37,7 +20,7 @@ const toggleExample = (wordId: string) => {
 const groupedWords = computed(() => {
   const q = searchQuery.value.toLowerCase();
 
-  const filtered = words.value.filter(
+  const filtered = dictionaryWords.value.filter(
     (word) =>
       word.word.toLowerCase().includes(q) ||
       word.meaning.toLowerCase().includes(q)
@@ -54,11 +37,7 @@ const groupedWords = computed(() => {
 });
 
 watch(uid, (newUid) => {
-  if (newUid) fetchWords();
-});
-
-onMounted(() => {
-  if (uid.value) fetchWords();
+  if (newUid) fetchDictionaryWords();
 });
 </script>
 
@@ -78,7 +57,7 @@ onMounted(() => {
           <label>Search by word or meaning...</label>
         </FloatLabel>
         <p class="text-sm text-gray-400 mt-2">
-          Total words in dictionary: {{ words.length }}
+          Total words in dictionary: {{ dictionaryWords.length }}
         </p>
       </div>
 
