@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { db } from "../../firebase";
 import {
   Advancements,
@@ -75,6 +75,15 @@ watch(uid, async (newUid) => {
   if (newUid) {
     await fetchWords();
     await fetchStatistics();
+    wordsLearned.value = statistics.value?.words_learned ?? 0;
+    cyclesCompleted.value = statistics.value?.cycles ?? 0;
+    dayStreak.value = statistics.value?.days ?? 0;
+    advancements.value = statistics.value?.advancements ?? [];
+  }
+});
+
+onMounted(() => {
+  if (statistics.value) {
     wordsLearned.value = statistics.value?.words_learned ?? 0;
     cyclesCompleted.value = statistics.value?.cycles ?? 0;
     dayStreak.value = statistics.value?.days ?? 0;
