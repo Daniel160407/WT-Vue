@@ -9,18 +9,14 @@ import {
   getDocs,
   increment,
   query,
-  updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
 import {
-  ACTIVE,
   DICTIONARY,
   LEVEL,
   USER_ID,
-  WORD_TYPE,
   WORD_TYPE_OPTIONS,
-  WORDS,
   WORDS_CATEGORY,
 } from "@/composables/constants";
 import Select from "primevue/select";
@@ -40,6 +36,7 @@ import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useConfirm } from "primevue/useconfirm";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
+import { useWordsCrud } from "@/composables/useWordsCrud";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
@@ -47,6 +44,7 @@ const confirm = useConfirm();
 const toast = useToast();
 const { words, level } = storeToRefs(useGlobalStore());
 const { fetchWords, fetchLevel } = useGlobalStore();
+const { dropWords, updateWord, deleteWord, deleteAllWords } = useWordsCrud();
 
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>();
@@ -93,20 +91,6 @@ const handleWordDoubleClick = (id: string) => {
   selectedWordOperationsId.value = id;
 };
 
-const mapWords = (snapshot: any): Word[] =>
-  snapshot.docs.map((d: any) => ({
-    id: d.id,
-    ...(d.data() as Omit<Word, "id">),
-  }));
-
-const createWordsQuery = (wordType: string, active: boolean) =>
-  query(
-    collection(db, WORDS),
-    where(WORD_TYPE, "==", wordType),
-    where(ACTIVE, "==", active),
-    where(USER_ID, "==", uid.value)
-  );
-
 const getLevelDocument = async (): Promise<{
   id: string;
   data: any;
@@ -135,18 +119,10 @@ const resetLevelAndDeleteWords = async () => {
   const batch = writeBatch(db);
 
   batch.update(doc(db, LEVEL, levelDoc.id), { level: 1 });
-
-  const wordsSnapshot = await getDocs(
-    query(
-      collection(db, WORDS),
-      where(WORD_TYPE, "==", WORDS_CATEGORY),
-      where(USER_ID, "==", uid.value)
-    )
-  );
-
-  wordsSnapshot.docs.forEach((d) => batch.delete(doc(db, WORDS, d.id)));
-
   await batch.commit();
+
+  await deleteAllWords();
+
   words.value = [];
   levelDocId.value = null;
 };
@@ -182,74 +158,6 @@ const advanceLevel = async () => {
   level.value!.level++;
 };
 
-const reactivateInactiveWords = async (): Promise<boolean> => {
-  if (!uid.value) return false;
-
-  const wordsSnapshot = await getDocs(
-    query(
-      collection(db, WORDS),
-      where(USER_ID, "==", uid.value),
-      where(ACTIVE, "==", false)
-    )
-  );
-
-  if (wordsSnapshot.empty) return false;
-
-  const batch = writeBatch(db);
-  wordsSnapshot.docs.forEach((wordDoc) => {
-    batch.update(doc(db, WORDS, wordDoc.id), { active: true });
-  });
-
-  await batch.commit();
-  return true;
-};
-
-const dropWords = async () => {
-  if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
-    return;
-
-  loading.value = true;
-
-  try {
-    const batch = writeBatch(db);
-    checkedWordIds.value.forEach((id) =>
-      batch.update(doc(db, WORDS, id), { active: false })
-    );
-
-    await batch.commit();
-    checkedWordIds.value.clear();
-
-    const remainingWordsSnapshot = await getDocs(
-      createWordsQuery(selectedWordTypeCode.value, true)
-    );
-    words.value = mapWords(remainingWordsSnapshot);
-
-    if (words.value.length === 0) {
-      await advanceLevel();
-      const hasReactivated = await reactivateInactiveWords();
-
-      if (hasReactivated) {
-        const reactivatedWordsSnapshot = await getDocs(
-          createWordsQuery(selectedWordTypeCode.value, true)
-        );
-        words.value = mapWords(reactivatedWordsSnapshot);
-      }
-    }
-  } finally {
-    await stats.updateDayStreak();
-    const daysAdvancement = await stats.checkAndGetDayAdvancement();
-    if (daysAdvancement) {
-      toast.add({
-        severity: "success",
-        summary: "Advancement made!",
-        detail: daysAdvancement,
-        life: 6000,
-      });
-    }
-    loading.value = false;
-  }
-};
-
 const handleWordDelete = async (word: Word) => {
   confirm.require({
     message: "Are you sure with your decisions?",
@@ -257,7 +165,7 @@ const handleWordDelete = async (word: Word) => {
     acceptProps: { label: "Delete", severity: "danger" },
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
-      const deletePromises = [deleteDoc(doc(db, WORDS, word.id))];
+      await deleteWord(word.id);
 
       const dictionaryQuery = query(
         collection(db, DICTIONARY),
@@ -267,12 +175,8 @@ const handleWordDelete = async (word: Word) => {
 
       const snapshot = await getDocs(dictionaryQuery);
       if (!snapshot.empty) {
-        deletePromises.push(
-          deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id))
-        );
+        await deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id));
       }
-
-      await Promise.all(deletePromises);
 
       words.value = words.value.filter((w) => w.id !== word.id);
       checkedWordIds.value.delete(word.id);
@@ -291,9 +195,7 @@ const handleWordEdit = (word: Word) => {
 const saveWordEdit = async (word: Word) => {
   loading.value = true;
   try {
-    const wordRef = doc(db, WORDS, word.id);
-    const { ...updateData } = word;
-    await updateDoc(wordRef, updateData);
+    updateWord(word);
     const wordType = selectedWordType.value?.code ?? "";
     await fetchWords(wordType);
   } catch (err) {
@@ -302,6 +204,17 @@ const saveWordEdit = async (word: Word) => {
     loading.value = false;
     showWordEditModal.value = false;
   }
+};
+
+const handleDropWords = () => {
+  if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
+    return;
+
+  dropWords(
+    checkedWordIds.value,
+    selectedWordType.value?.code ?? WORDS_CATEGORY,
+    words.value.length
+  );
 };
 
 watch([selectedWordTypeCode, uid], ([type, user]) => {
@@ -444,7 +357,7 @@ watch(uid, (newUid) => {
             :loading="loading"
             severity="warn"
             class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-xl!"
-            @click="dropWords"
+            @click="handleDropWords"
           />
         </div>
       </div>
