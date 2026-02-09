@@ -105,19 +105,26 @@ export const useGlobalStore = defineStore("globalStore", () => {
         query(collection(db, LEVEL), where(USER_ID, "==", uid.value))
       );
 
+      if (snapshot.empty) {
+        level.value = null;
+        return;
+      }
+
       const docSnap = snapshot.docs[0];
-      level.value = docSnap ? (docSnap.data() as Level) : null;
+
+      level.value = {
+        id: docSnap!.id,
+        ...(docSnap!.data() as Omit<Level, "id">),
+      };
     } catch (err) {
       console.error(err);
       toast.add({
         severity: "error",
-        summary: "Error appeared",
+        summary: "Error",
         detail: "Level could not be fetched",
-        life: 3000,
       });
     }
   };
-
   const setData = async () => {
     await Promise.allSettled([
       fetchWords(WORD_TYPE),

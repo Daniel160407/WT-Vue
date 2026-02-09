@@ -7,17 +7,12 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  increment,
   query,
   where,
-  writeBatch,
 } from "firebase/firestore";
 import {
   DICTIONARY,
-  LEVEL,
-  USER_ID,
   WORD_TYPE_OPTIONS,
-  WORDS_CATEGORY,
 } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
@@ -30,21 +25,21 @@ import {
   ProgressSpinner,
   Textarea,
 } from "primevue";
-import { useToast } from "primevue/usetoast";
 import { useAuth } from "@/composables/useAuth";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useConfirm } from "primevue/useconfirm";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { useWordsCrud } from "@/composables/useWordsCrud";
+import { useLevelCrud } from "@/composables/useLevelCrud";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const confirm = useConfirm();
-const toast = useToast();
 const { words, level } = storeToRefs(useGlobalStore());
 const { fetchWords, fetchLevel } = useGlobalStore();
-const { dropWords, updateWord, deleteWord, deleteAllWords } = useWordsCrud();
+const { dropWords, updateWord, deleteWord } = useWordsCrud();
+const { advanceLevel } = useLevelCrud();
 
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>();
@@ -72,8 +67,6 @@ const allWordsChecked = computed({
 
 const hasCheckedWords = computed(() => checkedWordIds.value.size > 0);
 
-const levelDocId = ref<string | null>(null);
-
 const toggleWordExamples = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
 };
@@ -89,73 +82,6 @@ const toggleWordCheck = (wordId: string, checked: boolean) => {
 const handleWordDoubleClick = (id: string) => {
   showWordOperations.value = !showWordOperations.value;
   selectedWordOperationsId.value = id;
-};
-
-const getLevelDocument = async (): Promise<{
-  id: string;
-  data: any;
-} | null> => {
-  if (!uid.value) return null;
-
-  const snapshot = await getDocs(
-    query(collection(db, LEVEL), where(USER_ID, "==", uid.value))
-  );
-
-  if (snapshot.empty) return null;
-
-  const docSnap = snapshot.docs[0];
-  return {
-    id: docSnap!.id,
-    data: docSnap!.data(),
-  };
-};
-
-const resetLevelAndDeleteWords = async () => {
-  if (!uid.value) return;
-
-  const levelDoc = await getLevelDocument();
-  if (!levelDoc) return;
-
-  const batch = writeBatch(db);
-
-  batch.update(doc(db, LEVEL, levelDoc.id), { level: 1 });
-  await batch.commit();
-
-  await deleteAllWords();
-
-  words.value = [];
-  levelDocId.value = null;
-};
-
-const advanceLevel = async () => {
-  if (!uid.value) return;
-
-  const levelDoc = await getLevelDocument();
-  if (!levelDoc) return;
-
-  const batch = writeBatch(db);
-  batch.update(doc(db, LEVEL, levelDoc.id), { level: increment(1) });
-  await batch.commit();
-
-  levelDocId.value = levelDoc.id;
-  if (level.value!.level === 5) {
-    await resetLevelAndDeleteWords();
-    await fetchLevel();
-    await stats.increaseCycles();
-
-    const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
-
-    if (cyclesAdvancement) {
-      toast.add({
-        severity: "success",
-        summary: "New cycles streak!",
-        detail: cyclesAdvancement,
-        life: 6000,
-      });
-    }
-    return;
-  }
-  level.value!.level++;
 };
 
 const handleWordDelete = async (word: Word) => {
@@ -206,15 +132,19 @@ const saveWordEdit = async (word: Word) => {
   }
 };
 
-const handleDropWords = () => {
+const handleDropWords = async () => {
   if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
     return;
 
-  dropWords(
+  await dropWords(
     checkedWordIds.value,
-    selectedWordType.value?.code ?? WORDS_CATEGORY,
     words.value.length
   );
+  await fetchWords(selectedWordTypeCode.value);
+  if (level.value) {
+    await advanceLevel(level.value);
+    await fetchLevel();
+  }
 };
 
 watch([selectedWordTypeCode, uid], ([type, user]) => {
@@ -229,15 +159,6 @@ watch(words, () => {
 
 onMounted(() => {
   selectedWordType.value = WORD_TYPE_OPTIONS[0];
-});
-
-watch(uid, (newUid) => {
-  if (newUid) {
-    levelDocId.value = null;
-    fetchLevel();
-  } else {
-    levelDocId.value = null;
-  }
 });
 </script>
 

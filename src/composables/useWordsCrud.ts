@@ -20,20 +20,6 @@ export const useWordsCrud = () => {
   const stats = useStatisticsStore();
   const toast = useToast();
 
-  const createWordsQuery = (wordType: string, active: boolean) =>
-    query(
-      collection(db, WORDS),
-      where(WORD_TYPE, "==", wordType),
-      where(ACTIVE, "==", active),
-      where(USER_ID, "==", uid.value)
-    );
-
-  const mapWords = (snapshot: any): Word[] =>
-    snapshot.docs.map((d: any) => ({
-      id: d.id,
-      ...(d.data() as Omit<Word, "id">),
-    }));
-
   const reactivateInactiveWords = async (): Promise<boolean> => {
     if (!uid.value) return false;
 
@@ -58,7 +44,6 @@ export const useWordsCrud = () => {
 
   const dropWords = async (
     checkedWordIds: Set<string>,
-    selectedWordType: string,
     totalWordsQuantity: number
   ) => {
     try {
@@ -68,19 +53,11 @@ export const useWordsCrud = () => {
       );
 
       await batch.commit();
-      checkedWordIds.clear();
 
-      if (totalWordsQuantity === 0) {
-        // await advanceLevel();
-        const hasReactivated = await reactivateInactiveWords();
-
-        if (hasReactivated) {
-          const reactivatedWordsSnapshot = await getDocs(
-            createWordsQuery(selectedWordType, true)
-          );
-          return mapWords(reactivatedWordsSnapshot);
-        }
+      if (totalWordsQuantity - checkedWordIds.size === 0) {
+        await reactivateInactiveWords();
       }
+      checkedWordIds.clear();
     } finally {
       await stats.updateDayStreak();
       const daysAdvancement = await stats.checkAndGetDayAdvancement();
