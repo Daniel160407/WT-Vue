@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { db } from "../../firebase";
 import {
   Advancements,
   DICTIONARY,
   groupedAdvancements,
-  STATISTICS,
   USER_ID,
 } from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
-import type {
-  DictionaryWord,
-  LevelStats,
-  Statistics,
-  WordLevel,
-} from "@/type/interfaces";
+import type { DictionaryWord, LevelStats, WordLevel } from "@/type/interfaces";
 import { Button } from "primevue";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
+
+const { uid } = useAuth();
+const { statistics } = storeToRefs(useGlobalStore());
+const { fetchStatistics } = useGlobalStore();
 
 const emptyLevelStats = (): LevelStats => ({
   A1: 0,
@@ -26,8 +26,6 @@ const emptyLevelStats = (): LevelStats => ({
   C1: 0,
   C2: 0,
 });
-
-const { uid } = useAuth();
 
 const wordsLearned = ref<number>(0);
 const cyclesCompleted = ref<number>(0);
@@ -63,27 +61,6 @@ const fetchWords = async () => {
   }
 };
 
-const fetchStatistics = async () => {
-  if (!uid.value) return;
-
-  try {
-    const snapshot = await getDocs(
-      query(collection(db, STATISTICS), where(USER_ID, "==", uid.value))
-    );
-    const statistics = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Statistics, "id">),
-    }));
-
-    wordsLearned.value = statistics[0]?.words_learned ?? 0;
-    cyclesCompleted.value = statistics[0]?.cycles ?? 0;
-    dayStreak.value = statistics[0]?.days ?? 0;
-    advancements.value = statistics[0]?.advancements ?? [];
-  } catch (err) {
-    console.error(err);
-  }
-};
-
 const handleShowAllAdvancements = () => {
   showAllAdvancements.value = !showAllAdvancements.value;
   if (showAllAdvancements.value) {
@@ -94,16 +71,25 @@ const handleShowAllAdvancements = () => {
 const hasAdvancement = (advancement: string) =>
   advancements.value.includes(advancement);
 
-watch(
-  uid,
-  (newUid) => {
-    if (newUid) {
-      fetchWords();
-      fetchStatistics();
-    }
-  },
-  { immediate: true }
-);
+watch(uid, async (newUid) => {
+  if (newUid) {
+    await fetchWords();
+    await fetchStatistics();
+    wordsLearned.value = statistics.value?.words_learned ?? 0;
+    cyclesCompleted.value = statistics.value?.cycles ?? 0;
+    dayStreak.value = statistics.value?.days ?? 0;
+    advancements.value = statistics.value?.advancements ?? [];
+  }
+});
+
+onMounted(() => {
+  if (statistics.value) {
+    wordsLearned.value = statistics.value?.words_learned ?? 0;
+    cyclesCompleted.value = statistics.value?.cycles ?? 0;
+    dayStreak.value = statistics.value?.days ?? 0;
+    advancements.value = statistics.value?.advancements ?? [];
+  }
+});
 </script>
 <template>
   <div class="flex flex-col items-center gap-8 px-4">

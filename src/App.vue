@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Menubar } from "primevue";
 import Toast from "primevue/toast";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   ADD_WORDS_LABEL,
@@ -21,8 +21,12 @@ import {
   TRANSLATIONS_ROUTE,
   WORDS_ROUTE,
 } from "./composables/constants";
+import { useGlobalStore } from "./stores/GlobalStore";
+import { useAuth } from "./composables/useAuth";
 
 const router = useRouter();
+const { setData } = useGlobalStore();
+const { uid } = useAuth();
 
 const items = ref([
   {
@@ -72,12 +76,24 @@ const items = ref([
     command: () => router.push(AUTH_ROUTE),
   },
 ]);
+
+watch(
+  () => uid.value,
+  (newUid) => {
+    if (newUid) {
+      setData();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-225 lg:p-4">
     <Menubar :model="items" />
-    <Toast />
+    <Toast
+      class="right-0 left-0 mx-auto w-full max-w-[100vw] px-2 [&_.p-toast-message]:max-w-full [&_.p-toast-message]:rounded-xl [&_.p-toast-message]:wrap-break-word [&_.p-toast-message]:whitespace-normal"
+    />
     <router-view />
   </div>
 </template>

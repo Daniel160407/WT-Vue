@@ -4,7 +4,7 @@ import { db } from "../../firebase";
 import { DICTIONARY, WORDS } from "./constants";
 import { useToast } from "primevue";
 import { ref } from "vue";
-import { useStatisticsStore } from "./useStatisticsStore";
+import { useStatisticsStore } from "../stores/useStatisticsStore";
 
 export const useAddWordsCrud = () => {
   const stats = useStatisticsStore();

@@ -8,7 +8,7 @@ import { useToast } from "primevue/usetoast";
 
 import { GEMINI, MESSAGES } from "@/composables/constants";
 import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
-import { useStatisticsStore } from "@/composables/useStatisticsStore";
+import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useGeminiChat } from "@/composables/useGeminiChat";
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
