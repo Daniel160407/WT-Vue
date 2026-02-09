@@ -1,16 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from "vue";
+import { ref, watch, computed } from "vue";
 import type { Word } from "@/type/interfaces";
-import { db } from "../../firebase";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
-import { DICTIONARY, WORD_TYPE_OPTIONS } from "@/composables/constants";
+import { WORD_TYPE_OPTIONS } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -38,7 +29,7 @@ const { words, level } = storeToRefs(useGlobalStore());
 const { fetchWords, fetchLevel, fetchDictionaryWords } = useGlobalStore();
 const { dropWords, updateWord, deleteWord } = useWordsCrud();
 const { advanceLevel } = useLevelCrud();
-const { deleteDictionaryWord } = useDictionaryCrud();
+const { updateDictionaryWord, deleteDictionaryWord } = useDictionaryCrud();
 
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>(
@@ -53,6 +44,7 @@ const selectedWordOperationsId = ref<string>("");
 const selectedWordTypeCode = computed(() => selectedWordType.value?.code);
 
 const editingWord = ref<Word | null>(null);
+const editingWordStartValue = ref<Word | null>(null);
 
 const allWordsChecked = computed({
   get: () =>
@@ -92,8 +84,8 @@ const handleWordDelete = async (word: Word) => {
     acceptProps: { label: "Delete", severity: "danger" },
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
-      await deleteWord(word.id);
       await deleteDictionaryWord(word);
+      await deleteWord(word.id);
       await fetchDictionaryWords();
 
       words.value = words.value.filter((w) => w.id !== word.id);
@@ -108,14 +100,18 @@ const handleWordDelete = async (word: Word) => {
 const handleWordEdit = (word: Word) => {
   showWordEditModal.value = true;
   editingWord.value = { ...word };
+  editingWordStartValue.value = { ...word };
 };
 
 const saveWordEdit = async (word: Word) => {
+  if (!editingWordStartValue.value || !editingWord.value) return;
   loading.value = true;
   try {
-    updateWord(word);
+    await updateDictionaryWord(editingWordStartValue.value, editingWord.value);
+    await updateWord(word);
     const wordType = selectedWordType.value?.code ?? "";
     await fetchWords(wordType);
+    await fetchDictionaryWords();
   } catch (err) {
     console.error(err);
   } finally {
