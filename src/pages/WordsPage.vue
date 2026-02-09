@@ -10,10 +10,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import {
-  DICTIONARY,
-  WORD_TYPE_OPTIONS,
-} from "@/composables/constants";
+import { DICTIONARY, WORD_TYPE_OPTIONS } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -32,17 +29,21 @@ import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { useWordsCrud } from "@/composables/useWordsCrud";
 import { useLevelCrud } from "@/composables/useLevelCrud";
+import { useDictionaryCrud } from "@/composables/useDictionaryCrud";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const confirm = useConfirm();
 const { words, level } = storeToRefs(useGlobalStore());
-const { fetchWords, fetchLevel } = useGlobalStore();
+const { fetchWords, fetchLevel, fetchDictionaryWords } = useGlobalStore();
 const { dropWords, updateWord, deleteWord } = useWordsCrud();
 const { advanceLevel } = useLevelCrud();
+const { deleteDictionaryWord } = useDictionaryCrud();
 
 const loading = ref(false);
-const selectedWordType = ref<{ name: string; code: string }>();
+const selectedWordType = ref<{ name: string; code: string }>(
+  WORD_TYPE_OPTIONS[0] ?? { name: "Words", code: "word" }
+);
 const expandedWordId = ref<string | null>(null);
 const checkedWordIds = ref<Set<string>>(new Set());
 const showWordOperations = ref(false);
@@ -92,17 +93,8 @@ const handleWordDelete = async (word: Word) => {
     rejectProps: { label: "Cancel", severity: "secondary", outlined: true },
     accept: async () => {
       await deleteWord(word.id);
-
-      const dictionaryQuery = query(
-        collection(db, DICTIONARY),
-        where("word", "==", word.word),
-        where("meaning", "==", word.meaning)
-      );
-
-      const snapshot = await getDocs(dictionaryQuery);
-      if (!snapshot.empty) {
-        await deleteDoc(doc(db, DICTIONARY, snapshot.docs[0]!.id));
-      }
+      await deleteDictionaryWord(word);
+      await fetchDictionaryWords();
 
       words.value = words.value.filter((w) => w.id !== word.id);
       checkedWordIds.value.delete(word.id);
@@ -136,10 +128,7 @@ const handleDropWords = async () => {
   if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
     return;
 
-  await dropWords(
-    checkedWordIds.value,
-    words.value.length
-  );
+  await dropWords(checkedWordIds.value, words.value.length);
   await fetchWords(selectedWordTypeCode.value);
   if (level.value) {
     await advanceLevel(level.value);
@@ -147,18 +136,13 @@ const handleDropWords = async () => {
   }
 };
 
-watch([selectedWordTypeCode, uid], ([type, user]) => {
-  if (type && user) {
-    fetchWords(type);
-  }
-});
+const handleWordTypeChange = (value: { name: string; code: string }) => {
+  if (!value?.code) return;
+  fetchWords(value.code);
+};
 
 watch(words, () => {
   checkedWordIds.value.clear();
-});
-
-onMounted(() => {
-  selectedWordType.value = WORD_TYPE_OPTIONS[0];
 });
 </script>
 
@@ -179,6 +163,7 @@ onMounted(() => {
           placeholder="Select word type"
           checkmark
           :highlightOnSelect="false"
+          @update:modelValue="handleWordTypeChange"
           class="w-full flex-1 md:flex-0"
         />
         <div class="flex items-center gap-2 text-white">

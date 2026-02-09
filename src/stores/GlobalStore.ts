@@ -127,7 +127,7 @@ export const useGlobalStore = defineStore("globalStore", () => {
   };
   const setData = async () => {
     await Promise.allSettled([
-      fetchWords(WORD_TYPE),
+      fetchWords("word"),
       fetchDictionaryWords(),
       fetchStatistics(),
       fetchLevel(),
