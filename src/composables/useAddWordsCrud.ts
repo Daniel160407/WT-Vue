@@ -12,7 +12,7 @@ export const useAddWordsCrud = () => {
 
   const saving = ref(false);
 
-  const addWord = async (word: WordForm) => {
+  const addWord: (word: WordForm) => Promise<void> = async (word: WordForm) => {
     saving.value = true;
 
     try {
@@ -92,13 +92,6 @@ export const useAddWordsCrud = () => {
           life: 6000,
         });
       }
-
-      toast.add({
-        severity: "success",
-        summary: "Word saved",
-        detail: `"${word.word}" was added successfully`,
-        life: 3000,
-      });
     } catch (error) {
       console.error(error);
       toast.add({

@@ -7,6 +7,7 @@ import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue";
 import { useWordsCrud } from "./useWordsCrud";
 import { useGlobalStore } from "@/stores/GlobalStore";
+import { ref } from "vue";
 
 export const useLevelCrud = () => {
   const { uid } = useAuth();
@@ -15,44 +16,75 @@ export const useLevelCrud = () => {
   const { deleteAllWords } = useWordsCrud();
   const { fetchWords } = useGlobalStore();
 
+  const saving = ref(false);
+
   const resetLevelAndDeleteWords = async (levelId: string) => {
     if (!uid.value) return;
 
-    const batch = writeBatch(db);
+    saving.value = true;
+    try {
+      const batch = writeBatch(db);
 
-    batch.update(doc(db, LEVEL, levelId), { level: 1 });
-    await batch.commit();
+      batch.update(doc(db, LEVEL, levelId), { level: 1 });
+      await batch.commit();
 
-    await deleteAllWords();
-    await fetchWords(WORDS_CATEGORY);
+      await deleteAllWords();
+      await fetchWords(WORDS_CATEGORY);
+    } catch (err) {
+      console.error(err);
+      toast.add({
+        severity: "error",
+        summary: "Error appeared",
+        detail: "Could not reset level or delete all words",
+        life: 3000,
+      });
+    } finally {
+      saving.value = false;
+    }
   };
 
   const advanceLevel = async (level: Level) => {
     if (!uid.value) return;
 
-    const batch = writeBatch(db);
-    batch.update(doc(db, LEVEL, level.id), { level: increment(1) });
-    await batch.commit();
+    saving.value = true;
 
-    if (level.level === 5) {
-      await resetLevelAndDeleteWords(level.id);
-      await stats.increaseCycles();
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, LEVEL, level.id), { level: increment(1) });
+      await batch.commit();
 
-      const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
+      if (level.level === 5) {
+        await resetLevelAndDeleteWords(level.id);
+        await stats.increaseCycles();
 
-      if (cyclesAdvancement) {
-        toast.add({
-          severity: "success",
-          summary: "New cycles streak!",
-          detail: cyclesAdvancement,
-          life: 6000,
-        });
+        const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
+
+        if (cyclesAdvancement) {
+          toast.add({
+            severity: "success",
+            summary: "New cycles streak!",
+            detail: cyclesAdvancement,
+            life: 6000,
+          });
+        }
+        return;
       }
-      return;
+    } catch (err) {
+      console.error(err);
+      toast.add({
+        severity: "error",
+        summary: "Error appeared",
+        detail: "Could not advance level",
+        life: 3000,
+      });
+    } finally {
+      saving.value = false;
     }
   };
 
   return {
+    saving,
+
     advanceLevel,
   };
 };

@@ -27,10 +27,12 @@ import { useGeminiChat } from "@/composables/useGeminiChat";
 import type { Word, WordForm } from "@/type/interfaces";
 import { useAuth } from "@/composables/useAuth";
 import { useAddWordsCrud } from "@/composables/useAddWordsCrud";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
 const { uid } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { saving, addWord, addAIWord } = useAddWordsCrud();
+const { fetchWords, fetchDictionaryWords } = useGlobalStore();
 
 const parsedAIWords = ref<Word[]>([]);
 const savingIndex = ref<number | null>(null);
@@ -63,7 +65,6 @@ const resolver = ({ values }: { values: any }) => {
 
   if (!values.word) errors.word = [{ message: "Word is required." }];
   if (!values.meaning) errors.meaning = [{ message: "Meaning is required." }];
-  if (!values.example) errors.example = [{ message: "Example is required." }];
 
   return { errors };
 };
@@ -76,6 +77,8 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
     user_id: uid.value,
   };
   await addWord(payload);
+  await fetchWords(formData.value.word_type);
+  await fetchDictionaryWords();
 
   formData.value.word = "";
   formData.value.meaning = "";
@@ -100,6 +103,8 @@ const onAIWordSave = async (word: Word, index: number) => {
     language_id: Cookies.get("language_id") ?? "",
   };
   await addAIWord(basePayload);
+  await fetchWords(formData.value.word_type);
+  await fetchDictionaryWords();
 
   parsedAIWords.value.splice(index, 1);
 };

@@ -27,8 +27,13 @@ const stats = useStatisticsStore();
 const confirm = useConfirm();
 const { words, level } = storeToRefs(useGlobalStore());
 const { fetchWords, fetchLevel, fetchDictionaryWords } = useGlobalStore();
-const { dropWords, updateWord, deleteWord } = useWordsCrud();
-const { advanceLevel } = useLevelCrud();
+const {
+  saving: wordsSaving,
+  dropWords,
+  updateWord,
+  deleteWord,
+} = useWordsCrud();
+const { saving: levelSaving, advanceLevel } = useLevelCrud();
 const { updateDictionaryWord, deleteDictionaryWord } = useDictionaryCrud();
 
 const loading = ref(false);
@@ -45,6 +50,10 @@ const selectedWordTypeCode = computed(() => selectedWordType.value?.code);
 
 const editingWord = ref<Word | null>(null);
 const editingWordStartValue = ref<Word | null>(null);
+
+const isSaving = computed(
+  () => loading.value || wordsSaving.value || levelSaving.value
+);
 
 const allWordsChecked = computed({
   get: () =>
@@ -124,9 +133,9 @@ const handleDropWords = async () => {
   if (!hasCheckedWords.value || !uid.value || !selectedWordTypeCode.value)
     return;
 
-  await dropWords(checkedWordIds.value, words.value.length);
+  const areDropped = await dropWords(checkedWordIds.value, words.value.length);
   await fetchWords(selectedWordTypeCode.value);
-  if (level.value) {
+  if (level.value && areDropped) {
     await advanceLevel(level.value);
     await fetchLevel();
   }
@@ -146,7 +155,7 @@ watch(words, () => {
   <div class="flex flex-col justify-start items-center min-h-screen w-full">
     <div class="mt-10 max-w-3xl w-full p-5 bg-[#333333] rounded-2xl shadow-lg">
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
-        Level {{ level?.level }}
+        Level {{ level?.level ?? 0 }}
       </h1>
 
       <div
@@ -177,15 +186,14 @@ watch(words, () => {
 
       <div>
         <div
-          v-if="loading && words.length === 0"
+          v-if="isSaving && words.length === 0"
           class="flex items-center justify-center py-10"
         >
           <ProgressSpinner
-            style="width: 60px; height: 60px"
+            style="width: 50px; height: 50px"
             strokeWidth="3"
             fill="transparent"
             animationDuration=".5s"
-            aria-label="Loading Members"
           />
         </div>
 
@@ -256,8 +264,9 @@ watch(words, () => {
         <div class="mt-6">
           <Button
             label="Drop"
-            :loading="loading"
             severity="warn"
+            :loading="isSaving"
+            :disabled="isSaving"
             class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-xl!"
             @click="handleDropWords"
           />
@@ -288,10 +297,10 @@ watch(words, () => {
         <FloatLabel variant="in">
           <Select
             v-model="editingWord.word_type"
-            :options="WORD_TYPE_OPTIONS"
             optionLabel="name"
             option-value="code"
             checkmark
+            :options="WORD_TYPE_OPTIONS"
             :highlightOnSelect="false"
             class="w-full"
           />
@@ -308,7 +317,8 @@ watch(words, () => {
         />
         <Button
           label="Save"
-          :loading="loading"
+          :loading="isSaving"
+          :disabled="isSaving"
           @click="saveWordEdit(editingWord)"
         />
       </div>
