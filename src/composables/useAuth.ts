@@ -17,6 +17,8 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 const uid = computed(() => user.value?.uid ?? null);
+const photoURL = computed(() => user.value?.photoURL ?? null);
+const displayName = computed(() => user.value?.displayName ?? null);
 
 export function useAuth() {
   const checkIfUserIsRegistered = async (
@@ -93,6 +95,8 @@ export function useAuth() {
 
   return {
     user,
+    photoURL,
+    displayName,
     uid,
     loading,
     error,

@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { Menubar } from "primevue";
+import { Avatar, Menu, Menubar } from "primevue";
 import Toast from "primevue/toast";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   ADD_WORDS_LABEL,
   ADD_WORDS_ROUTE,
   AI,
   AI_ROUTE,
-  AUTH_ROUTE,
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
@@ -26,7 +25,37 @@ import { useAuth } from "./composables/useAuth";
 
 const router = useRouter();
 const { setData } = useGlobalStore();
-const { uid } = useAuth();
+const { photoURL, uid, logout, signInWithGoogle } = useAuth();
+
+const userMenu = ref();
+const toggleUserMenu = (event: Event) => {
+  userMenu.value.toggle(event);
+};
+const avatarSrc = computed(() => {
+  return photoURL.value
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(photoURL.value)}`
+    : "https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png";
+});
+
+const userMenuItems = ref([
+  {
+    label: "Logout",
+    icon: "pi pi-sign-out",
+    command: async () => {
+      await logout();
+      router.push("/auth");
+    },
+  },
+]);
+const notAuthenticatedUserItems = ref([
+  {
+    label: "Sign In",
+    icon: "pi pi-sign-in",
+    command: async () => {
+      await signInWithGoogle();
+    },
+  },
+]);
 
 const items = ref([
   {
@@ -70,30 +99,41 @@ const items = ref([
     icon: "pi pi-chart-bar",
     command: () => router.push(STATISTICS_ROUTE),
   },
-  {
-    label: "Auth",
-    icon: "pi pi-chart-bar",
-    command: () => router.push(AUTH_ROUTE),
-  },
 ]);
 
 watch(
   () => uid.value,
   (newUid) => {
-    if (newUid) {
-      setData();
-    }
+    if (newUid) setData();
   },
   { immediate: true }
 );
 </script>
-
 <template>
   <div class="z-20 w-full rounded-xl bg-[#18181B] lg:min-w-225 lg:p-4">
-    <Menubar :model="items" />
+    <Menubar :model="items">
+      <template #end>
+        <div class="flex items-center gap-2">
+          <Avatar
+            v-if="uid"
+            shape="circle"
+            :image="avatarSrc"
+            @click="toggleUserMenu"
+            class="cursor-pointer"
+          />
+          <Menu
+            ref="userMenu"
+            :model="uid ? userMenuItems : notAuthenticatedUserItems"
+            popup
+          />
+        </div>
+      </template>
+    </Menubar>
+
     <Toast
       class="right-0 left-0 mx-auto w-full max-w-[100vw] px-2 [&_.p-toast-message]:max-w-full [&_.p-toast-message]:rounded-xl [&_.p-toast-message]:wrap-break-word [&_.p-toast-message]:whitespace-normal"
     />
+
     <router-view />
   </div>
 </template>
