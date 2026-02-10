@@ -1,5 +1,127 @@
 @import "tailwindcss";
 
 body {
-    background-color: #000000;
+  background-color: #000000;
+}
+
+.ai-message {
+  font-family: "Inter", sans-serif;
+  color: #f3f4f6;
+  line-height: 1.6;
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.ai-message h1,
+.ai-message h2,
+.ai-message h3 {
+  color: #facc15;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-message h1 {
+  font-size: 1.5rem;
+}
+.ai-message h2 {
+  font-size: 1.25rem;
+}
+.ai-message h3 {
+  font-size: 1.1rem;
+}
+
+.ai-message p {
+  margin: 0.5rem 0;
+  color: #e5e7eb;
+}
+
+.ai-message ul,
+.ai-message ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+  list-style-position: inside;
+}
+
+.ai-message li {
+  margin: 0.25rem 0;
+}
+
+.ai-message strong {
+  color: #fde047;
+  font-weight: 600;
+}
+.ai-message em {
+  color: #d1d5db;
+  font-style: italic;
+}
+
+.ai-message blockquote {
+  border-left: 3px solid #facc15;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #f3f4f6;
+  font-style: italic;
+  background-color: rgba(250, 204, 21, 0.05);
+  border-radius: 4px;
+}
+
+.ai-message pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "Fira Code", monospace;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.ai-message code {
+  background-color: #374151;
+  color: #fef3c7;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-family: "Fira Code", monospace;
+  font-size: 0.9rem;
+}
+
+.ai-message hr {
+  margin: 1rem 0;
+  border-color: #555;
+  border-width: 1px;
+}
+
+.ai-message a {
+  color: #facc15;
+  text-decoration: underline;
+}
+
+.ai-message img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+}
+
+.ai-message table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+.ai-message th,
+.ai-message td {
+  border: 1px solid #374151;
+  padding: 0.5rem;
+}
+.ai-message th {
+  background-color: #1f2937;
+  color: #facc15;
+}
+.ai-message td {
+  color: #e5e7eb;
+}
+
+.ai-message img,
+.ai-message svg {
+  vertical-align: middle;
 }
