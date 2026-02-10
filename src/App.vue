@@ -115,9 +115,12 @@ watch(
       <template #end>
         <div class="flex items-center gap-2">
           <Avatar
-            v-if="uid"
             shape="circle"
-            :image="avatarSrc"
+            :image="
+              uid
+                ? avatarSrc
+                : 'https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png'
+            "
             @click="toggleUserMenu"
             class="cursor-pointer"
           />
