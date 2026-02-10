@@ -245,7 +245,7 @@ watch(
 
           <InputText
             v-model="translations[word.id]"
-            class="w-full !bg-[#444444] !border !border-gray-400 focus:!border-white text-white"
+            class="w-full bg-[#444444]! border! border-gray-400! focus:border-white! text-white"
           />
 
           <p
@@ -266,7 +266,7 @@ watch(
         <Button
           label="Check Answers"
           @click="checkAnswers"
-          class="!bg-[#ffc107] !border-[#ffc107] !text-black w-full !text-xl"
+          class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-xl!"
         />
       </div>
     </div>
