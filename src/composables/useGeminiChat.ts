@@ -2,6 +2,7 @@ import { ref } from "vue";
 import { GoogleGenAI } from "@google/genai";
 import { GEMINI, GEMINI_MODEL, USER } from "@/composables/constants";
 import type { MessageObj, MessageSender } from "@/type/interfaces";
+import { formatAiText } from "@/utils/formatAIText";
 
 export function useGeminiChat() {
   const ai = new GoogleGenAI({
@@ -40,10 +41,12 @@ export function useGeminiChat() {
         model: GEMINI_MODEL,
         contents: fullPrompt,
       });
-
-      messages.value.push(
-        createMessage(GEMINI, response.text ?? "No response")
+      const answer = await formatAiText(
+        response?.text ?? "Server is busy. Please try again later..."
       );
+      console.log(answer);
+
+      messages.value.push(createMessage(GEMINI, answer ?? "No response"));
     } catch (err) {
       console.error(err);
       messages.value.push(

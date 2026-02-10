@@ -153,13 +153,17 @@ watch(words, () => {
 
 <template>
   <div class="flex flex-col justify-start items-center min-h-screen w-full">
-    <div class="mt-10 max-w-3xl w-full p-5 bg-[#333333] rounded-2xl shadow-lg">
-      <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
+    <div
+      class="mt-6 sm:mt-10 max-w-3xl w-full py-4 sm:py-5 px-3 sm:px-5 bg-[#333333] rounded-2xl shadow-lg"
+    >
+      <h1
+        class="text-[#ffc107] text-2xl sm:text-[30px] font-bold text-center mb-4 sm:mb-6"
+      >
         Level {{ level?.level ?? 0 }}
       </h1>
 
       <div
-        class="flex md:flex-row md:justify-between md:items-center gap-4 mb-6"
+        class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6"
       >
         <Select
           v-model="selectedWordType"
@@ -169,19 +173,20 @@ watch(words, () => {
           checkmark
           :highlightOnSelect="false"
           @update:modelValue="handleWordTypeChange"
-          class="w-full flex-1 md:flex-0"
+          class="w-full md:max-w-xs"
         />
-        <div class="flex items-center gap-2 text-white">
-          <label class="text-sm font-medium">
-            <Checkbox
-              v-model="allWordsChecked"
-              binary
-              :disabled="words.length === 0"
-              class="text-yellow-400 flex-1"
-            />
-            Select All
-          </label>
-        </div>
+
+        <label
+          class="flex items-center gap-2 text-white text-sm md:text-base justify-start md:justify-end"
+        >
+          <Checkbox
+            v-model="allWordsChecked"
+            binary
+            :disabled="words.length === 0"
+            class="text-yellow-400"
+          />
+          Select All
+        </label>
       </div>
 
       <div>
@@ -202,21 +207,21 @@ watch(words, () => {
             v-for="word in words"
             :key="word.id"
             @dblclick="handleWordDoubleClick(word.id)"
-            class="bg-[#444444] rounded-xl p-4 border border-gray-500 flex justify-center md:flex-row md:items-center gap-3 hover:bg-[#555] transition-colors duration-300"
+            class="bg-[#444444] rounded-xl p-3 sm:p-4 border border-gray-500 flex md:flex-row md:items-center hover:bg-[#555] transition-colors duration-300"
           >
             <div class="flex flex-col justify-center items-center w-full">
-              <p class="text-[40px] text-center">
-                {{ word.word }} -
-                <span>{{ word.meaning }}</span>
+              <p
+                class="text-[24px] sm:text-[32px] text-center wrap-break-word"
+              >
+                {{ word.word }} –
+                <span class="block sm:inline">{{ word.meaning }}</span>
               </p>
               <div
                 v-if="expandedWordId === word.id && word.example"
-                class="mt-2 text-gray-300 p-4 bg-[#18181b] rounded-[10px] w-full"
+                class="mt-3 text-gray-300 p-3 sm:p-4 bg-[#18181b] rounded-xl w-full text-sm sm:text-base"
               >
-                <p class="text-[#ffc107] text-lg">Example usages:</p>
-                <p>
-                  {{ word.example }}
-                </p>
+                <p class="text-[#ffc107] font-semibold mb-1">Example usages:</p>
+                <p>{{ word.example }}</p>
               </div>
             </div>
 
@@ -240,9 +245,9 @@ watch(words, () => {
             </div>
             <div
               v-if="showWordOperations && word.id === selectedWordOperationsId"
-              class="flex flex-col"
+              class="flex flex-row md:flex-col items-center gap-2 mt-2 md:mt-0"
             >
-              <ConfirmDialog></ConfirmDialog>
+              <ConfirmDialog />
               <Button
                 icon="pi pi-trash"
                 severity="danger"

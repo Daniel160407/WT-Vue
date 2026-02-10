@@ -22,7 +22,6 @@ export const SENTENCES_ROUTE = "/sentences";
 export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
 export const STATISTICS_ROUTE = "/statistics";
-export const AUTH_ROUTE = "/auth";
 
 //firebase
 export const WORDS = "words";
@@ -41,6 +40,7 @@ export const LANGUAGE_ID = "language_id";
 export const WORD_TYPE_OPTIONS = [
   { name: "Words", code: "word" },
   { name: "Irregular Verbs", code: "irregular" },
+  { name: "Other", code: "other" },
 ];
 export const WORD_LEVEL_OPTIONS = [
   { name: "A1", code: "A1" },
@@ -88,6 +88,7 @@ export const CAPITALS = [
   "Ö",
   "Ü",
 ];
+export const ARTICLES = ["der", "die", "das", "the", "a", "an"];
 
 //word categories
 export const ALL_CATEGORY = "all";
