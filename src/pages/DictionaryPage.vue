@@ -5,6 +5,7 @@ import { useAuth } from "@/composables/useAuth";
 import type { DictionaryWord } from "@/type/interfaces";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { storeToRefs } from "pinia";
+import { ARTICLES } from "@/composables/constants";
 
 const { uid } = useAuth();
 const { dictionaryWords } = storeToRefs(useGlobalStore());
@@ -17,6 +18,18 @@ const toggleExample = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
 };
 
+const normalizeWord = (word: string) => {
+  const lower = word.toLowerCase().trim();
+
+  for (const article of ARTICLES) {
+    if (lower.startsWith(article + " ")) {
+      return lower.slice(article.length + 1);
+    }
+  }
+
+  return lower;
+};
+
 const groupedWords = computed(() => {
   const q = searchQuery.value.toLowerCase();
 
@@ -26,12 +39,17 @@ const groupedWords = computed(() => {
       word.meaning.toLowerCase().includes(q)
   );
 
-  const sorted = [...filtered].sort((a, b) => a.word.localeCompare(b.word));
+  const sorted = [...filtered].sort((a, b) =>
+    normalizeWord(a.word).localeCompare(normalizeWord(b.word))
+  );
 
   return sorted.reduce<Record<string, DictionaryWord[]>>((acc, word) => {
-    const letter = word.word.charAt(0).toUpperCase();
+    const normalized = normalizeWord(word.word);
+    const letter = normalized.charAt(0).toUpperCase();
+
     if (!acc[letter]) acc[letter] = [];
     acc[letter].push(word);
+
     return acc;
   }, {});
 });
