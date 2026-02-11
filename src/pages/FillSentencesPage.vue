@@ -221,7 +221,7 @@ const handleCheckAnswers = () => {
         :validateOnValueUpdate="false"
         :validateOnBlur="true"
         @submit="generateSentences"
-        class="flex flex-col gap-4 w-full sm:w-80"
+        class="flex flex-col gap-4 w-full sm:w-80 p-4"
       >
         <div>
           <FloatLabel variant="on">

@@ -69,6 +69,15 @@ const allWordsChecked = computed({
 
 const hasCheckedWords = computed(() => checkedWordIds.value.size > 0);
 
+const getExampleList = (example?: string): string[] => {
+  if (!example) return [];
+
+  return example
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+};
+
 const toggleWordExamples = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
 };
@@ -210,9 +219,7 @@ watch(words, () => {
             class="bg-[#444444] rounded-xl p-3 sm:p-4 border border-gray-500 flex md:flex-row md:items-center hover:bg-[#555] transition-colors duration-300"
           >
             <div class="flex flex-col justify-center items-center w-full">
-              <p
-                class="text-[24px] sm:text-[32px] text-center wrap-break-word"
-              >
+              <p class="text-[24px] sm:text-[32px] text-center wrap-break-word">
                 {{ word.word }} –
                 <span class="block sm:inline">{{ word.meaning }}</span>
               </p>
@@ -221,7 +228,14 @@ watch(words, () => {
                 class="mt-3 text-gray-300 p-3 sm:p-4 bg-[#18181b] rounded-xl w-full text-sm sm:text-base"
               >
                 <p class="text-[#ffc107] font-semibold mb-1">Example usages:</p>
-                <p>{{ word.example }}</p>
+                <ul class="list-disc pl-5 space-y-1 marker:text-[#ffc107]">
+                  <li
+                    v-for="(sentence, index) in getExampleList(word.example)"
+                    :key="index"
+                  >
+                    {{ sentence }}
+                  </li>
+                </ul>
               </div>
             </div>
 
