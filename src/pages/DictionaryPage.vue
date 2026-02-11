@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { FloatLabel, InputText } from "primevue";
-import { ref, watch, computed } from "vue";
-import { useAuth } from "@/composables/useAuth";
+import { ref, computed } from "vue";
 import type { DictionaryWord } from "@/type/interfaces";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { storeToRefs } from "pinia";
 import { ARTICLES } from "@/composables/constants";
 
-const { uid } = useAuth();
 const { dictionaryWords } = storeToRefs(useGlobalStore());
-const { fetchDictionaryWords } = useGlobalStore();
 
 const searchQuery = ref("");
 const expandedWordId = ref<string | null>(null);
@@ -52,10 +49,6 @@ const groupedWords = computed(() => {
 
     return acc;
   }, {});
-});
-
-watch(uid, (newUid) => {
-  if (newUid) fetchDictionaryWords();
 });
 </script>
 
