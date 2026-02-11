@@ -87,7 +87,7 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
 
 const onAIFormSubmit = async () => {
   const prompt = `Generate ${AIFormData.value.quantity} words in ${AIFormData.value.translateFrom} with translations in ${AIFormData.value.translateTo} of level ${AIFormData.value.level} and about thema: ${AIFormData.value.topic}. If there is a noun, start its article with uppercase letter. Return only a JSON array in this format: [{"word": "word1", "meaning": "translation"}, ...] without any additional text, explanations, or markdown formatting.`;
-  await sendMessage(prompt);
+  await sendMessage(prompt, false);
 };
 
 const onAIWordSave = async (word: Word, index: number) => {
@@ -123,7 +123,7 @@ const handleAIResponse = () => {
 
 const generateExamples = async () => {
   const prompt = `Generate 3 example sentences in ${formData.value.level}, where the word: ${formData.value.word} is used, one per line, without any extra text`;
-  await sendMessage(prompt);
+  await sendMessage(prompt, false);
   const examples = messages.value[messages.value.length - 1]?.payload;
   formData.value.example = examples ?? "";
 };

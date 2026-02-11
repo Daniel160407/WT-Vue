@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import { useAuth } from "@/composables/useAuth";
-import type { SentencePart, Word } from "@/type/interfaces";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import type { SentencePart } from "@/type/interfaces";
 import { ref } from "vue";
-import { db } from "../../firebase";
 import {
-  ACTIVE,
   GEMINI,
-  USER_ID,
   WORD_LEVEL_COOKIE,
   WORD_LEVEL_OPTIONS,
-  WORD_TYPE,
-  WORDS,
-  WORDS_CATEGORY,
 } from "@/composables/constants";
 import { useGeminiChat } from "@/composables/useGeminiChat";
 import Cookies from "js-cookie";
@@ -28,11 +20,12 @@ import {
   Message,
   Select,
 } from "primevue";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
-const { uid } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
+const { words } = storeToRefs(useGlobalStore());
 
-const words = ref<Word[]>([]);
 const sentences = ref<string[]>([]);
 const editedSentences = ref<string[]>([]);
 const answers = ref<string[]>([]);
@@ -50,24 +43,6 @@ const formData = ref({
   useExistingWords: true,
   quantity: 10,
 });
-
-const fetchWords = async () => {
-  if (!uid.value) return;
-
-  const snapshot = await getDocs(
-    query(
-      collection(db, WORDS),
-      where(WORD_TYPE, "==", WORDS_CATEGORY),
-      where(ACTIVE, "==", true),
-      where(USER_ID, "==", uid.value)
-    )
-  );
-
-  words.value = snapshot.docs.map((d: any) => ({
-    id: d.id,
-    ...(d.data() as Omit<Word, "id">),
-  }));
-};
 
 const generateSentences = async () => {
   const prompt = formData.value.useExistingWords
@@ -146,7 +121,7 @@ OUTPUT FORMAT:
 }
 `;
 
-  await sendMessage(prompt);
+  await sendMessage(prompt, false);
 
   const geminiMessage = [...messages.value]
     .reverse()
@@ -227,13 +202,6 @@ const resolver = () => {
   return { errors };
 };
 
-const onFormSubmit = async () => {
-  if (uid.value && formData.value.useExistingWords) {
-    await fetchWords();
-  }
-  await generateSentences();
-};
-
 const handleCheckAnswers = () => {
   areAnswersChecked.value = true;
 };
@@ -252,7 +220,7 @@ const handleCheckAnswers = () => {
         :resolver
         :validateOnValueUpdate="false"
         :validateOnBlur="true"
-        @submit="onFormSubmit"
+        @submit="generateSentences"
         class="flex flex-col gap-4 w-full sm:w-80"
       >
         <div>
