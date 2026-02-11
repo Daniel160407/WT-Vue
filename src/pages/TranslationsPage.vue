@@ -25,7 +25,7 @@ const { uid } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
 const { fetchTranslationsPageWords } = useWordsCrud();
-const { dictionaryWords } = storeToRefs(useGlobalStore());
+const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
 
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
@@ -128,7 +128,9 @@ const checkAnswers = async () => {
   });
 
   stats.updateDayStreak();
-  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement(
+    statistics.value?.advancements ?? []
+  );
   if (daysAdvancement) {
     toast.add({
       severity: "success",
@@ -137,6 +139,11 @@ const checkAnswers = async () => {
       life: 6000,
     });
   }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 
 const shuffleArray = (array: any[]) => {
@@ -225,7 +232,6 @@ watch(
           icon="pi pi-sync"
           @click="handleReset"
           class="bg-gray-600! border-gray-600! text-white! px-4!"
-          v-tooltip.top="'Reset'"
         />
       </div>
 

@@ -5,8 +5,11 @@ import { DICTIONARY, WORDS } from "./constants";
 import { useToast } from "primevue";
 import { ref } from "vue";
 import { useStatisticsStore } from "../stores/useStatisticsStore";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
 export const useAddWordsCrud = () => {
+  const { statistics } = storeToRefs(useGlobalStore());
   const stats = useStatisticsStore();
   const toast = useToast();
 
@@ -30,7 +33,9 @@ export const useAddWordsCrud = () => {
       await stats.increaseWordsLearned();
       await stats.updateDayStreak();
 
-      const dayAdv = await stats.checkAndGetDayAdvancement();
+      const dayAdv = await stats.checkAndGetDayAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (dayAdv) {
         toast.add({
           severity: "success",
@@ -40,7 +45,9 @@ export const useAddWordsCrud = () => {
         });
       }
 
-      const wordAdv = await stats.checkAndGetWordsAdvancement();
+      const wordAdv = await stats.checkAndGetWordsAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (wordAdv) {
         toast.add({
           severity: "success",
@@ -73,7 +80,9 @@ export const useAddWordsCrud = () => {
       await stats.increaseWordsLearned();
       await stats.updateDayStreak();
 
-      const dayAdv = await stats.checkAndGetDayAdvancement();
+      const dayAdv = await stats.checkAndGetDayAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (dayAdv) {
         toast.add({
           severity: "success",
@@ -83,7 +92,9 @@ export const useAddWordsCrud = () => {
         });
       }
 
-      const wordAdv = await stats.checkAndGetWordsAdvancement();
+      const wordAdv = await stats.checkAndGetWordsAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (wordAdv) {
         toast.add({
           severity: "success",

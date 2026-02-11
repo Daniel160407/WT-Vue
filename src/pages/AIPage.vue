@@ -6,10 +6,11 @@ import { GEMINI } from "@/composables/constants";
 import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useGeminiChat } from "@/composables/useGeminiChat";
-
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
-
+const { statistics } = storeToRefs(useGlobalStore());
 const stats = useStatisticsStore();
 const toast = useToast();
 
@@ -28,7 +29,9 @@ const submit = async () => {
   await scrollToBottom();
 
   await stats.updateDayStreak();
-  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement(
+    statistics.value?.advancements ?? []
+  );
   if (daysAdvancement) {
     toast.add({
       severity: "success",

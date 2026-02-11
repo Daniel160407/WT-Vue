@@ -8,6 +8,7 @@ import { useToast } from "primevue";
 import { useWordsCrud } from "./useWordsCrud";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { ref } from "vue";
+import { storeToRefs } from "pinia";
 
 export const useLevelCrud = () => {
   const { uid } = useAuth();
@@ -15,6 +16,7 @@ export const useLevelCrud = () => {
   const toast = useToast();
   const { deleteAllWords } = useWordsCrud();
   const { fetchWords } = useGlobalStore();
+  const { statistics } = storeToRefs(useGlobalStore());
 
   const saving = ref(false);
 
@@ -57,7 +59,9 @@ export const useLevelCrud = () => {
         await resetLevelAndDeleteWords(level.id);
         await stats.increaseCycles();
 
-        const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement();
+        const cyclesAdvancement = await stats.checkAndGetCyclesAdvancement(
+          statistics.value?.advancements ?? []
+        );
 
         if (cyclesAdvancement) {
           toast.add({

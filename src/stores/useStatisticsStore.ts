@@ -126,122 +126,81 @@ export const useStatisticsStore = defineStore("statistics", {
       });
     },
 
-    async checkAndGetDayAdvancement() {
+    async checkAndGetDayAdvancement(existingAdvancements: string[]) {
       const days = this.data?.days;
 
-      let advancement: Advancement | null = null;
+      if (!days) return;
 
-      switch (days) {
-        case 1:
-          advancement = Advancements.ONEDAYSTREAK;
-          break;
-        case 3:
-          advancement = Advancements.THREEDAYSTREAK;
-          break;
-        case 7:
-          advancement = Advancements.WEEKSTREAK;
-          break;
-        case 14:
-          advancement = Advancements.TWOWEEKSTREAK;
-          break;
-        case 21:
-          advancement = Advancements.THREEWEEKSTREAK;
-          break;
-        case 30:
-          advancement = Advancements.MONTHSTREAK;
-          break;
-        case 60:
-          advancement = Advancements.TWOMONTHSTREAK;
-          break;
-        case 180:
-          advancement = Advancements.SIXMONTHSTREAK;
-          break;
-        case 365:
-          advancement = Advancements.ONEYEARSTREAK;
-          break;
-      }
+      const dayToAdvancementMap: Record<number, Advancement> = {
+        1: Advancements.ONEDAYSTREAK,
+        3: Advancements.THREEDAYSTREAK,
+        7: Advancements.WEEKSTREAK,
+        14: Advancements.TWOWEEKSTREAK,
+        21: Advancements.THREEWEEKSTREAK,
+        30: Advancements.MONTHSTREAK,
+        60: Advancements.TWOMONTHSTREAK,
+        180: Advancements.SIXMONTHSTREAK,
+        365: Advancements.ONEYEARSTREAK,
+      };
 
-      if (advancement) {
-        await this.addAdvancement(advancement);
-        return advancement;
-      }
+      const advancement = dayToAdvancementMap[days];
+
+      if (!advancement) return;
+
+      if (existingAdvancements.includes(advancement)) return;
+
+      await this.addAdvancement(advancement);
+
+      return advancement;
     },
 
-    async checkAndGetCyclesAdvancement() {
+    async checkAndGetCyclesAdvancement(existingAdvancements: string[]) {
       const cycles = this.data?.cycles;
 
-      let advancement: Advancement | null = null;
+      if (cycles == null) return;
 
-      switch (cycles + 1) {
-        case 1:
-          advancement = Advancements.ONECYCLESTREAK;
-          break;
-        case 5:
-          advancement = Advancements.FIVECYCLESSTREAK;
-          break;
-        case 10:
-          advancement = Advancements.TENCYCLESSTREAK;
-          break;
-        case 20:
-          advancement = Advancements.TWENTYCYCLESSTREAK;
-          break;
-        case 30:
-          advancement = Advancements.THIRTYCYCLESSTREAK;
-          break;
-        case 50:
-          advancement = Advancements.FIFTYCYCLESSTREAK;
-          break;
-      }
+      const CYCLE_ADVANCEMENT_MAP: Record<number, Advancement> = {
+        1: Advancements.ONECYCLESTREAK,
+        5: Advancements.FIVECYCLESSTREAK,
+        10: Advancements.TENCYCLESSTREAK,
+        20: Advancements.TWENTYCYCLESSTREAK,
+        30: Advancements.THIRTYCYCLESSTREAK,
+        50: Advancements.FIFTYCYCLESSTREAK,
+      };
 
-      if (advancement) {
-        await this.addAdvancement(advancement);
-        return advancement;
-      }
+      const nextCycle = cycles + 1;
+
+      const advancement = CYCLE_ADVANCEMENT_MAP[nextCycle];
+
+      if (!advancement || existingAdvancements.includes(advancement)) return;
+
+      await this.addAdvancement(advancement);
+      return advancement;
     },
 
-    async checkAndGetWordsAdvancement() {
+    async checkAndGetWordsAdvancement(existingAdvancements: string[]) {
       const words = this.data?.words_learned;
 
-      let advancement: Advancement | null = null;
+      if (words == null) return;
 
-      switch (words) {
-        case 10:
-          advancement = Advancements.TENWORDS;
-          break;
-        case 50:
-          advancement = Advancements.FIFTYWORDS;
-          break;
-        case 100:
-          advancement = Advancements.HUNDREDWORDS;
-          break;
-        case 300:
-          advancement = Advancements.THREEHUNDREDWORDS;
-          break;
-        case 500:
-          advancement = Advancements.FIVEHUNDREDWORDS;
-          break;
-        case 700:
-          advancement = Advancements.SEVENHUNDREDWORDS;
-          break;
-        case 1000:
-          advancement = Advancements.THOUSANDWORDS;
-          break;
-        case 3000:
-          advancement = Advancements.THREETHOUSANDWORDS;
-          break;
-        case 5000:
-          advancement = Advancements.FIVETHOUSANDWORDS;
-          break;
-      }
+      const WORD_ADVANCEMENT_MAP: Record<number, Advancement> = {
+        10: Advancements.TENWORDS,
+        50: Advancements.FIFTYWORDS,
+        100: Advancements.HUNDREDWORDS,
+        300: Advancements.THREEHUNDREDWORDS,
+        500: Advancements.FIVEHUNDREDWORDS,
+        700: Advancements.SEVENHUNDREDWORDS,
+        1000: Advancements.THOUSANDWORDS,
+        3000: Advancements.THREETHOUSANDWORDS,
+        5000: Advancements.FIVETHOUSANDWORDS,
+      };
 
-      if (advancement) {
-        await this.addAdvancement(advancement);
-        return advancement;
-      }
-    },
+      const advancement = WORD_ADVANCEMENT_MAP[words];
 
-    reset() {
-      this.statDoc = null;
+      if (!advancement || existingAdvancements.includes(advancement)) return;
+
+      await this.addAdvancement(advancement);
+      return advancement;
     },
   },
 });
