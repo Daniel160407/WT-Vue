@@ -1,28 +1,13 @@
 <script setup lang="ts">
 import {
-  ACTIVE,
-  ALL_CATEGORY,
+  ARTICLES,
   CAPITALS,
-  DICTIONARY,
   DICTIONARY_CATEGORY,
-  DROPPED_WORDS_CATEGORY,
-  IRREGULAR_VERBS_CATEGORY,
-  USER_ID,
   WORD_CATEGORIES,
-  WORD_TYPE,
-  WORDS,
   WORDS_CATEGORY,
 } from "@/composables/constants";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  type Query,
-} from "firebase/firestore";
 import { Button, FloatLabel, InputText, Select } from "primevue";
 import { ref, watch } from "vue";
-import { db } from "../../firebase";
 import { useAuth } from "@/composables/useAuth";
 import type {
   DictionaryWord,
@@ -32,10 +17,15 @@ import type {
 } from "@/type/interfaces";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue/usetoast";
+import { useGlobalStore } from "@/stores/GlobalStore";
+import { storeToRefs } from "pinia";
+import { useWordsCrud } from "@/composables/useWordsCrud";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
+const { fetchTranslationsPageWords } = useWordsCrud();
+const { dictionaryWords } = storeToRefs(useGlobalStore());
 
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
@@ -59,52 +49,26 @@ const resetInputs = () => {
   });
 };
 
-const fetchDictionaryWords = async () => {
-  const snapshot = await getDocs(collection(db, DICTIONARY));
-
-  words.value = snapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<DictionaryWord, "id">),
-    }))
-    .filter((word) =>
-      word.word.toUpperCase().startsWith(selectedCapital.value)
-    );
-
-  resetInputs();
+const normalizeWord = (input: string): string => {
+  return input
+    .trim()
+    .split(/\s+/)
+    .filter((word, index) =>
+      index === 0 ? !ARTICLES.includes(word.toLowerCase()) : true
+    )
+    .join(" ");
 };
 
-const buildWordsQuery = (category: string): Query | null => {
-  if (!uid.value) return null;
+const handleFetchDictionaryWords = async () => {
+  words.value = dictionaryWords.value.filter((item) => {
+    const cleanedWord = normalizeWord(item.word);
 
-  switch (category) {
-    case WORDS_CATEGORY:
-    case DROPPED_WORDS_CATEGORY:
-      return query(
-        collection(db, WORDS),
-        where(WORD_TYPE, "==", WORDS_CATEGORY),
-        where(ACTIVE, "==", category === WORDS_CATEGORY),
-        where(USER_ID, "==", uid.value)
-      );
+    return cleanedWord
+      .toUpperCase()
+      .startsWith(selectedCapital.value.toUpperCase());
+  });
 
-    case IRREGULAR_VERBS_CATEGORY:
-      return query(
-        collection(db, WORDS),
-        where(WORD_TYPE, "==", IRREGULAR_VERBS_CATEGORY),
-        where(ACTIVE, "==", true),
-        where(USER_ID, "==", uid.value)
-      );
-
-    case ALL_CATEGORY:
-      return query(
-        collection(db, WORDS),
-        where(WORD_TYPE, "==", WORDS_CATEGORY),
-        where(USER_ID, "==", uid.value)
-      );
-
-    default:
-      return null;
-  }
+  resetInputs();
 };
 
 const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
@@ -114,23 +78,12 @@ const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
     showCapitals.value = category === DICTIONARY_CATEGORY;
 
     if (category === DICTIONARY_CATEGORY) {
-      await fetchDictionaryWords();
+      selectedCapital.value = "A";
+      await handleFetchDictionaryWords();
       return;
     }
 
-    selectedCapital.value = "A";
-
-    const wordsQuery = buildWordsQuery(category);
-    if (!wordsQuery) return;
-
-    const snapshot = await getDocs(wordsQuery);
-
-    words.value = shuffleArray(
-      snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Word, "id">),
-      }))
-    );
+    words.value = shuffleArray((await fetchTranslationsPageWords()) ?? []);
 
     resetInputs();
   } catch (error) {
@@ -174,7 +127,7 @@ const shuffleArray = (array: any[]) => {
 
 watch(selectedCapital, async () => {
   if (wordCategory.value.code === DICTIONARY_CATEGORY) {
-    await fetchDictionaryWords();
+    await handleFetchDictionaryWords();
   }
 });
 

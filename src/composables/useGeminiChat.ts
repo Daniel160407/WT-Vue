@@ -27,7 +27,7 @@ export function useGeminiChat() {
       .map((m) => `${m.sender === USER ? USER : GEMINI}: ${m.payload}`)
       .join("\n");
 
-  const sendMessage = async (userText: string) => {
+  const sendMessage = async (userText: string, formatResponse = true) => {
     const trimmed = userText.trim();
     if (!trimmed) return;
 
@@ -41,10 +41,11 @@ export function useGeminiChat() {
         model: GEMINI_MODEL,
         contents: fullPrompt,
       });
-      const answer = await formatAiText(
-        response?.text ?? "Server is busy. Please try again later..."
-      );
-      console.log(answer);
+      const answer = formatResponse
+        ? await formatAiText(
+            response?.text ?? "Server is busy. Please try again later..."
+          )
+        : response.text;
 
       messages.value.push(createMessage(GEMINI, answer ?? "No response"));
     } catch (err) {

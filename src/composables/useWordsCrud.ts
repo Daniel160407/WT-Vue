@@ -3,6 +3,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  Query,
   query,
   updateDoc,
   where,
@@ -10,10 +11,19 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "./useAuth";
 import { db } from "../../firebase";
-import { ACTIVE, USER_ID, WORD_TYPE, WORDS, WORDS_CATEGORY } from "./constants";
+import {
+  ACTIVE,
+  ALL_CATEGORY,
+  DROPPED_WORDS_CATEGORY,
+  IRREGULAR_VERBS_CATEGORY,
+  USER_ID,
+  WORD_TYPE,
+  WORDS,
+  WORDS_CATEGORY,
+} from "./constants";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue";
-import type { Word } from "@/type/interfaces";
+import type { Word, WordCategory } from "@/type/interfaces";
 import { ref } from "vue";
 
 export const useWordsCrud = () => {
@@ -172,6 +182,53 @@ export const useWordsCrud = () => {
     }
   };
 
+  const buildWordsQuery = (category: string): Query | null => {
+    if (!uid.value) return null;
+
+    switch (category) {
+      case WORDS_CATEGORY:
+      case DROPPED_WORDS_CATEGORY:
+        return query(
+          collection(db, WORDS),
+          where(WORD_TYPE, "==", WORDS_CATEGORY),
+          where(ACTIVE, "==", category === WORDS_CATEGORY),
+          where(USER_ID, "==", uid.value)
+        );
+
+      case IRREGULAR_VERBS_CATEGORY:
+        return query(
+          collection(db, WORDS),
+          where(WORD_TYPE, "==", IRREGULAR_VERBS_CATEGORY),
+          where(ACTIVE, "==", true),
+          where(USER_ID, "==", uid.value)
+        );
+
+      case ALL_CATEGORY:
+        return query(
+          collection(db, WORDS),
+          where(WORD_TYPE, "==", WORDS_CATEGORY),
+          where(USER_ID, "==", uid.value)
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const fetchTranslationsPageWords = async (
+    category: WordCategory = WORDS_CATEGORY
+  ) => {
+    const wordsQuery = buildWordsQuery(category);
+    if (!wordsQuery) return;
+
+    const snapshot = await getDocs(wordsQuery);
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Word, "id">),
+    }));
+  };
+
   return {
     saving,
 
@@ -179,5 +236,6 @@ export const useWordsCrud = () => {
     updateWord,
     deleteWord,
     deleteAllWords,
+    fetchTranslationsPageWords,
   };
 };
