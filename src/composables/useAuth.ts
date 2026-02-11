@@ -11,6 +11,7 @@ import router from "./router";
 import type { AppUser } from "@/type/interfaces";
 import Cookies from "js-cookie";
 import { NAME, PHOTO_URL, UID, USERS, WORDS_ROUTE } from "./constants";
+import { useCreateUserData } from "./useCreateUserData";
 
 const user = ref<FirebaseUser | null>(null);
 const loading = ref(true);
@@ -21,6 +22,8 @@ const photoURL = computed(() => user.value?.photoURL ?? null);
 const displayName = computed(() => user.value?.displayName ?? null);
 
 export function useAuth() {
+  const { createLevelForUser, createStatisticsForUser } = useCreateUserData();
+
   const checkIfUserIsRegistered = async (
     firebaseUser: FirebaseUser
   ): Promise<boolean> => {
@@ -52,6 +55,9 @@ export function useAuth() {
       Cookies.set(UID, firebaseUser.uid);
       Cookies.set(NAME, firebaseUser.displayName || "");
       Cookies.set(PHOTO_URL, firebaseUser.photoURL || "");
+
+      await createLevelForUser(firebaseUser.uid);
+      await createStatisticsForUser(firebaseUser.uid);
 
       router.push(WORDS_ROUTE);
     } catch (err) {
@@ -88,6 +94,9 @@ export function useAuth() {
       }
 
       user.value = firebaseUser;
+
+      await createLevelForUser(firebaseUser.uid);
+      await createStatisticsForUser(firebaseUser.uid);
     } finally {
       loading.value = false;
     }
