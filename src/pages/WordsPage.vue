@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import type { Word } from "@/type/interfaces";
-import { WORD_TYPE_OPTIONS } from "@/composables/constants";
+import { WORD_LEVEL_OPTIONS, WORD_TYPE_OPTIONS } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -329,18 +329,30 @@ watch(words, () => {
           class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
           @click="generateExamples(editingWord)"
         />
-        <FloatLabel variant="in">
-          <Select
-            v-model="editingWord.word_type"
-            optionLabel="name"
-            option-value="code"
-            checkmark
-            :options="WORD_TYPE_OPTIONS"
-            :highlightOnSelect="false"
-            class="w-full"
-          />
-          <label>Word Category</label>
-        </FloatLabel>
+        <div class="flex gap-4">
+          <FloatLabel variant="in" class="flex-1">
+            <Select
+              v-model="editingWord.word_type"
+              optionLabel="name"
+              option-value="code"
+              checkmark
+              :options="WORD_TYPE_OPTIONS"
+              :highlightOnSelect="false"
+              class="w-full"
+            />
+            <label>Word Category</label>
+          </FloatLabel>
+          <FloatLabel variant="in" class="flex-1">
+            <Select
+              v-model="editingWord.level"
+              :options="WORD_LEVEL_OPTIONS"
+              optionLabel="name"
+              option-value="code"
+              class="w-full"
+            />
+            <label>Word Level</label>
+          </FloatLabel>
+        </div>
       </div>
 
       <div class="flex justify-end gap-2">
