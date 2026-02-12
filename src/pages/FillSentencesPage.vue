@@ -45,6 +45,8 @@ const formData = ref({
 });
 
 const generateSentences = async () => {
+  areAnswersChecked.value = false;
+
   const prompt = formData.value.useExistingWords
     ? `
 You are a ${formData.value.level.code} ${
@@ -205,6 +207,15 @@ const resolver = () => {
 const handleCheckAnswers = () => {
   areAnswersChecked.value = true;
 };
+
+const handleReset = () => {
+  answers.value = new Array(sentences.value.length).fill("");
+
+  areAnswersChecked.value = false;
+  showCorrectAnswers.value = false;
+
+  shuffledCorrectAnswers.value = shuffleArray(correctAnswers.value);
+};
 </script>
 
 <template>
@@ -315,7 +326,8 @@ const handleCheckAnswers = () => {
                     v-if="areAnswersChecked"
                     :class="[
                       'absolute right-2 top-1/2 -translate-y-1/2 text-sm',
-                      answers[part.index] === correctAnswers[part.index]
+                      answers[part.index]?.toLowerCase() ===
+                      correctAnswers[part.index]?.toLowerCase()
                         ? 'pi pi-thumbs-up text-green-500!'
                         : 'pi pi-thumbs-down text-red-500!',
                     ]"
@@ -356,6 +368,11 @@ const handleCheckAnswers = () => {
           v-if="areAnswersChecked"
           label="Show correct answers"
           @click="showCorrectAnswers = true"
+        />
+        <Button
+          v-if="areAnswersChecked"
+          icon="pi pi-sync"
+          @click="handleReset"
         />
       </div>
     </div>
