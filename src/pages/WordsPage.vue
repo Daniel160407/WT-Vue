@@ -21,6 +21,7 @@ import { useGlobalStore } from "@/stores/GlobalStore";
 import { useWordsCrud } from "@/composables/useWordsCrud";
 import { useLevelCrud } from "@/composables/useLevelCrud";
 import { useDictionaryCrud } from "@/composables/useDictionaryCrud";
+import { useGeminiChat } from "@/composables/useGeminiChat";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
@@ -35,6 +36,7 @@ const {
 } = useWordsCrud();
 const { saving: levelSaving, advanceLevel } = useLevelCrud();
 const { updateDictionaryWord, deleteDictionaryWord } = useDictionaryCrud();
+const { messages, sendMessage, waitingForResponse } = useGeminiChat();
 
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>(
@@ -153,6 +155,13 @@ const handleDropWords = async () => {
 const handleWordTypeChange = (value: { name: string; code: string }) => {
   if (!value?.code) return;
   fetchWords(value.code);
+};
+
+const generateExamples = async (editingWord: Word) => {
+  const prompt = `Generate 3 example sentences in ${editingWord.level}, where the word: ${editingWord.word} is used, one per line, without any extra text`;
+  await sendMessage(prompt, false);
+  const examples = messages.value[messages.value.length - 1]?.payload;
+  editingWord.example = examples ?? "";
 };
 
 watch(words, () => {
@@ -313,6 +322,13 @@ watch(words, () => {
           <Textarea v-model="editingWord.example" class="w-full" />
           <label>Examples</label>
         </FloatLabel>
+        <Button
+          label="Generate Examples"
+          :loading="waitingForResponse"
+          severity="warn"
+          class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
+          @click="generateExamples(editingWord)"
+        />
         <FloatLabel variant="in">
           <Select
             v-model="editingWord.word_type"

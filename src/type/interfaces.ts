@@ -29,6 +29,7 @@ export interface Word {
   example: string;
   word_type: WordCategory;
   active: boolean;
+  level: WordLevel;
   user_id: string;
   language_id: Language;
 }
