@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { ref, nextTick } from "vue";
+import { ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { Button, InputText, Message } from "primevue";
 import { useToast } from "primevue/usetoast";
 import { GEMINI } from "@/composables/constants";
 import ResponsePendingLoader from "@/components/UI/ResponsePendingLoader.vue";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useGeminiChat } from "@/composables/useGeminiChat";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
+import { useExerciseStore } from "@/stores/useExerciseStore";
 
+const exerciseStore = useExerciseStore();
+const { AIMessages } = storeToRefs(exerciseStore);
+const { saveAIMessages } = exerciseStore;
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
-
+const { statistics } = storeToRefs(useGlobalStore());
 const stats = useStatisticsStore();
 const toast = useToast();
 
@@ -28,7 +34,9 @@ const submit = async () => {
   await scrollToBottom();
 
   await stats.updateDayStreak();
-  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement(
+    statistics.value?.advancements ?? []
+  );
   if (daysAdvancement) {
     toast.add({
       severity: "success",
@@ -52,6 +60,20 @@ const scrollToBottom = async () => {
     behavior: "smooth",
   });
 };
+
+onMounted(async () => {
+  if (AIMessages.value.length) {
+    messages.value = [...AIMessages.value];
+    await nextTick();
+    scrollToBottom();
+  }
+});
+
+onBeforeUnmount(() => {
+  if (messages.value.length) {
+    saveAIMessages([...messages.value]);
+  }
+});
 </script>
 
 <template>

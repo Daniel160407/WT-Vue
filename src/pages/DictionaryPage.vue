@@ -11,6 +11,15 @@ const { dictionaryWords } = storeToRefs(useGlobalStore());
 const searchQuery = ref("");
 const expandedWordId = ref<string | null>(null);
 
+const getExampleList = (example?: string): string[] => {
+  if (!example) return [];
+
+  return example
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+};
+
 const toggleExample = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
 };
@@ -103,9 +112,14 @@ const groupedWords = computed(() => {
                 class="mt-3 p-4 bg-[#18181b] rounded-xl text-gray-300 border border-gray-600"
               >
                 <p class="text-[#ffc107] font-semibold mb-1">Example</p>
-                <p class="whitespace-pre-line">
-                  {{ word.example }}
-                </p>
+                <ul class="list-disc pl-5 space-y-2 marker:text-[#ffc107]">
+                  <li
+                    v-for="(sentence, index) in getExampleList(word.example)"
+                    :key="index"
+                  >
+                    {{ sentence }}
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import type { Word } from "@/type/interfaces";
-import { WORD_TYPE_OPTIONS } from "@/composables/constants";
+import { WORD_LEVEL_OPTIONS, WORD_TYPE_OPTIONS } from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -21,6 +21,7 @@ import { useGlobalStore } from "@/stores/GlobalStore";
 import { useWordsCrud } from "@/composables/useWordsCrud";
 import { useLevelCrud } from "@/composables/useLevelCrud";
 import { useDictionaryCrud } from "@/composables/useDictionaryCrud";
+import { useGeminiChat } from "@/composables/useGeminiChat";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
@@ -35,6 +36,7 @@ const {
 } = useWordsCrud();
 const { saving: levelSaving, advanceLevel } = useLevelCrud();
 const { updateDictionaryWord, deleteDictionaryWord } = useDictionaryCrud();
+const { messages, sendMessage, waitingForResponse } = useGeminiChat();
 
 const loading = ref(false);
 const selectedWordType = ref<{ name: string; code: string }>(
@@ -68,6 +70,15 @@ const allWordsChecked = computed({
 });
 
 const hasCheckedWords = computed(() => checkedWordIds.value.size > 0);
+
+const getExampleList = (example?: string): string[] => {
+  if (!example) return [];
+
+  return example
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+};
 
 const toggleWordExamples = (wordId: string) => {
   expandedWordId.value = expandedWordId.value === wordId ? null : wordId;
@@ -146,6 +157,13 @@ const handleWordTypeChange = (value: { name: string; code: string }) => {
   fetchWords(value.code);
 };
 
+const generateExamples = async (editingWord: Word) => {
+  const prompt = `Generate 3 example sentences in ${editingWord.level}, where the word: ${editingWord.word} is used, one per line, without any extra text`;
+  await sendMessage(prompt, false);
+  const examples = messages.value[messages.value.length - 1]?.payload;
+  editingWord.example = examples ?? "";
+};
+
 watch(words, () => {
   checkedWordIds.value.clear();
 });
@@ -210,9 +228,7 @@ watch(words, () => {
             class="bg-[#444444] rounded-xl p-3 sm:p-4 border border-gray-500 flex md:flex-row md:items-center hover:bg-[#555] transition-colors duration-300"
           >
             <div class="flex flex-col justify-center items-center w-full">
-              <p
-                class="text-[24px] sm:text-[32px] text-center wrap-break-word"
-              >
+              <p class="text-[24px] sm:text-[32px] text-center wrap-break-word">
                 {{ word.word }} –
                 <span class="block sm:inline">{{ word.meaning }}</span>
               </p>
@@ -221,7 +237,14 @@ watch(words, () => {
                 class="mt-3 text-gray-300 p-3 sm:p-4 bg-[#18181b] rounded-xl w-full text-sm sm:text-base"
               >
                 <p class="text-[#ffc107] font-semibold mb-1">Example usages:</p>
-                <p>{{ word.example }}</p>
+                <ul class="list-disc pl-5 space-y-1 marker:text-[#ffc107]">
+                  <li
+                    v-for="(sentence, index) in getExampleList(word.example)"
+                    :key="index"
+                  >
+                    {{ sentence }}
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -299,18 +322,37 @@ watch(words, () => {
           <Textarea v-model="editingWord.example" class="w-full" />
           <label>Examples</label>
         </FloatLabel>
-        <FloatLabel variant="in">
-          <Select
-            v-model="editingWord.word_type"
-            optionLabel="name"
-            option-value="code"
-            checkmark
-            :options="WORD_TYPE_OPTIONS"
-            :highlightOnSelect="false"
-            class="w-full"
-          />
-          <label>Word Category</label>
-        </FloatLabel>
+        <Button
+          label="Generate Examples"
+          :loading="waitingForResponse"
+          severity="warn"
+          class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
+          @click="generateExamples(editingWord)"
+        />
+        <div class="flex gap-4">
+          <FloatLabel variant="in" class="flex-1">
+            <Select
+              v-model="editingWord.word_type"
+              optionLabel="name"
+              option-value="code"
+              checkmark
+              :options="WORD_TYPE_OPTIONS"
+              :highlightOnSelect="false"
+              class="w-full"
+            />
+            <label>Word Category</label>
+          </FloatLabel>
+          <FloatLabel variant="in" class="flex-1">
+            <Select
+              v-model="editingWord.level"
+              :options="WORD_LEVEL_OPTIONS"
+              optionLabel="name"
+              option-value="code"
+              class="w-full"
+            />
+            <label>Word Level</label>
+          </FloatLabel>
+        </div>
       </div>
 
       <div class="flex justify-end gap-2">

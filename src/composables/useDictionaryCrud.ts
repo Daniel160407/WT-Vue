@@ -42,6 +42,7 @@ export const useDictionaryCrud = () => {
         word: updatedWord.word,
         meaning: updatedWord.meaning,
         example: updatedWord.example,
+        level: updatedWord.level,
         language_id: updatedWord.language_id,
         user_id: updatedWord.user_id,
       };

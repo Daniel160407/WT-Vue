@@ -210,14 +210,6 @@ watch(waitingForResponse, () => {
                   />
                   <label>Examples (one per line)</label>
                 </FloatLabel>
-                <Message
-                  v-if="$form.example?.invalid"
-                  severity="error"
-                  size="small"
-                  variant="simple"
-                >
-                  {{ $form.example.error.message }}
-                </Message>
                 <Button
                   label="Generate Examples"
                   :loading="waitingForResponse"

@@ -5,12 +5,28 @@ import { DICTIONARY, WORDS } from "./constants";
 import { useToast } from "primevue";
 import { ref } from "vue";
 import { useStatisticsStore } from "../stores/useStatisticsStore";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
 export const useAddWordsCrud = () => {
+  const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
   const stats = useStatisticsStore();
   const toast = useToast();
 
   const saving = ref(false);
+
+  const normalizeWord = (value: string) => value.toLowerCase().trim();
+
+  const checkIfWordAlreadyExistsInDictionary = (word: WordForm): boolean => {
+    const normalizedNew = normalizeWord(word.word);
+
+    return dictionaryWords.value.some(
+      (w) =>
+        normalizeWord(w.word) === normalizedNew &&
+        w.user_id === word.user_id &&
+        w.language_id === word.language_id
+    );
+  };
 
   const addWord: (word: WordForm) => Promise<void> = async (word: WordForm) => {
     saving.value = true;
@@ -18,19 +34,22 @@ export const useAddWordsCrud = () => {
     try {
       await addDoc(collection(db, WORDS), word);
 
-      await addDoc(collection(db, DICTIONARY), {
-        word: word.word,
-        meaning: word.meaning,
-        example: word.example,
-        level: word.level,
-        user_id: word.user_id,
-        language_id: word.language_id,
-      });
-
-      await stats.increaseWordsLearned();
+      if (!checkIfWordAlreadyExistsInDictionary(word)) {
+        await addDoc(collection(db, DICTIONARY), {
+          word: word.word,
+          meaning: word.meaning,
+          example: word.example,
+          level: word.level,
+          user_id: word.user_id,
+          language_id: word.language_id,
+        });
+        await stats.increaseWordsLearned();
+      }
       await stats.updateDayStreak();
 
-      const dayAdv = await stats.checkAndGetDayAdvancement();
+      const dayAdv = await stats.checkAndGetDayAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (dayAdv) {
         toast.add({
           severity: "success",
@@ -40,7 +59,9 @@ export const useAddWordsCrud = () => {
         });
       }
 
-      const wordAdv = await stats.checkAndGetWordsAdvancement();
+      const wordAdv = await stats.checkAndGetWordsAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (wordAdv) {
         toast.add({
           severity: "success",
@@ -68,12 +89,15 @@ export const useAddWordsCrud = () => {
     try {
       await addDoc(collection(db, WORDS), word);
 
-      await addDoc(collection(db, DICTIONARY), word);
-
-      await stats.increaseWordsLearned();
+      if (!checkIfWordAlreadyExistsInDictionary(word)) {
+        await addDoc(collection(db, DICTIONARY), word);
+        await stats.increaseWordsLearned();
+      }
       await stats.updateDayStreak();
 
-      const dayAdv = await stats.checkAndGetDayAdvancement();
+      const dayAdv = await stats.checkAndGetDayAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (dayAdv) {
         toast.add({
           severity: "success",
@@ -83,7 +107,9 @@ export const useAddWordsCrud = () => {
         });
       }
 
-      const wordAdv = await stats.checkAndGetWordsAdvancement();
+      const wordAdv = await stats.checkAndGetWordsAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (wordAdv) {
         toast.add({
           severity: "success",

@@ -7,7 +7,7 @@ import {
   WORDS_CATEGORY,
 } from "@/composables/constants";
 import { Button, FloatLabel, InputText, Select } from "primevue";
-import { ref, watch } from "vue";
+import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import type {
   DictionaryWord,
@@ -20,12 +20,24 @@ import { useToast } from "primevue/usetoast";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { storeToRefs } from "pinia";
 import { useWordsCrud } from "@/composables/useWordsCrud";
+import { useExerciseStore } from "@/stores/useExerciseStore";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
 const { fetchTranslationsPageWords } = useWordsCrud();
-const { dictionaryWords } = storeToRefs(useGlobalStore());
+const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
+const exerciseStore = useExerciseStore();
+const {
+  translationWords,
+  translationUserInputs,
+  translationResults,
+  translationLanguage,
+  translationCategory,
+  translationCapital,
+} = storeToRefs(exerciseStore);
+
+const { saveTranslationExercise } = exerciseStore;
 
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
@@ -39,6 +51,29 @@ const results = ref<Record<string, boolean>>({});
 
 const showCapitals = ref(false);
 const selectedCapital = ref<string>("A");
+
+const correctAnswersCount = computed(() => {
+  return Object.values(results.value).filter(Boolean).length;
+});
+
+const totalAnswersCount = computed(() => {
+  return words.value.length;
+});
+
+const percentage = computed(() => {
+  if (!totalAnswersCount.value) return 0;
+  return Math.round(
+    (correctAnswersCount.value / totalAnswersCount.value) * 100
+  );
+});
+
+const hasChecked = computed(() => {
+  return Object.keys(results.value).length > 0;
+});
+
+const handleReset = () => {
+  resetInputs();
+};
 
 const resetInputs = () => {
   translations.value = {};
@@ -72,7 +107,7 @@ const handleFetchDictionaryWords = async () => {
 };
 
 const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
-  if (!uid.value) return;
+  if (!uid.value || translationWords.value.length) return;
 
   try {
     showCapitals.value = category === DICTIONARY_CATEGORY;
@@ -105,7 +140,9 @@ const checkAnswers = async () => {
   });
 
   stats.updateDayStreak();
-  const daysAdvancement = await stats.checkAndGetDayAdvancement();
+  const daysAdvancement = await stats.checkAndGetDayAdvancement(
+    statistics.value?.advancements ?? []
+  );
   if (daysAdvancement) {
     toast.add({
       severity: "success",
@@ -114,6 +151,11 @@ const checkAnswers = async () => {
       life: 6000,
     });
   }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 
 const shuffleArray = (array: any[]) => {
@@ -141,7 +183,37 @@ watch(
   },
   { immediate: true }
 );
+
+onMounted(() => {
+  if (translationWords.value.length) {
+    words.value = [...translationWords.value];
+    translations.value = { ...translationUserInputs.value };
+    results.value = { ...translationResults.value };
+
+    selectedLanguage.value = translationLanguage.value as any;
+
+    if (translationCategory.value) {
+      wordCategory.value = translationCategory.value;
+    }
+
+    selectedCapital.value = translationCapital.value;
+  }
+});
+
+onBeforeUnmount(() => {
+  if (!words.value.length) return;
+
+  saveTranslationExercise(
+    [...words.value],
+    { ...translations.value },
+    { ...results.value },
+    selectedLanguage.value,
+    wordCategory.value,
+    selectedCapital.value
+  );
+});
 </script>
+
 <template>
   <div class="flex justify-center items-center flex-col w-full mt-10">
     <div
@@ -186,6 +258,24 @@ watch(
         </div>
       </div>
 
+      <div
+        v-if="hasChecked"
+        class="text-center mt-4 text-xl font-bold flex justify-between items-center"
+        :class="percentage === 100 ? 'text-green-400' : 'text-yellow-400'"
+      >
+        <p>
+          {{ correctAnswersCount }} / {{ totalAnswersCount }} Correct ({{
+            percentage
+          }}%)
+        </p>
+        <Button
+          v-if="hasChecked"
+          icon="pi pi-sync"
+          @click="handleReset"
+          class="bg-gray-600! border-gray-600! text-white! px-4!"
+        />
+      </div>
+
       <div class="mt-6 w-80">
         <div
           v-for="word in words"
@@ -207,7 +297,7 @@ watch(
             class="text-center font-semibold"
           >
             <span v-if="!results[word.id]">
-              {{ "Correct: " }}
+              Correct:
               {{ selectedLanguage === "GEO" ? word.meaning : word.word }}
             </span>
             <span v-else>Correct!</span>
@@ -215,7 +305,7 @@ watch(
         </div>
       </div>
 
-      <div>
+      <div class="mt-4">
         <Button
           label="Check Answers"
           @click="checkAnswers"

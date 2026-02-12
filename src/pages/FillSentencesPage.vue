@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SentencePart } from "@/type/interfaces";
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import {
   GEMINI,
   WORD_LEVEL_COOKIE,
@@ -22,9 +22,14 @@ import {
 } from "primevue";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
+import { useExerciseStore } from "@/stores/useExerciseStore";
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { words } = storeToRefs(useGlobalStore());
+const exerciseStore = useExerciseStore();
+const { generatedSentences, sentencesCorrectAnswers, userSentencesAnswers } =
+  storeToRefs(exerciseStore);
+const { saveSentencesData } = exerciseStore;
 
 const sentences = ref<string[]>([]);
 const editedSentences = ref<string[]>([]);
@@ -45,6 +50,8 @@ const formData = ref({
 });
 
 const generateSentences = async () => {
+  areAnswersChecked.value = false;
+
   const prompt = formData.value.useExistingWords
     ? `
 You are a ${formData.value.level.code} ${
@@ -205,6 +212,35 @@ const resolver = () => {
 const handleCheckAnswers = () => {
   areAnswersChecked.value = true;
 };
+
+const handleReset = () => {
+  answers.value = new Array(sentences.value.length).fill("");
+
+  areAnswersChecked.value = false;
+  showCorrectAnswers.value = false;
+
+  shuffledCorrectAnswers.value = shuffleArray(correctAnswers.value);
+};
+
+onMounted(() => {
+  if (generatedSentences.value.length && sentencesCorrectAnswers.value.length) {
+    sentences.value = [...generatedSentences.value];
+    correctAnswers.value = [...sentencesCorrectAnswers.value];
+    answers.value = [...userSentencesAnswers.value];
+
+    editedSentences.value = handleGeneratedSentencesEdit(
+      generatedSentences.value
+    );
+
+    shuffledCorrectAnswers.value = shuffleArray(sentencesCorrectAnswers.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (sentences.value.length) {
+    saveSentencesData(sentences.value, correctAnswers.value, answers.value);
+  }
+});
 </script>
 
 <template>
@@ -221,7 +257,7 @@ const handleCheckAnswers = () => {
         :validateOnValueUpdate="false"
         :validateOnBlur="true"
         @submit="generateSentences"
-        class="flex flex-col gap-4 w-full sm:w-80"
+        class="flex flex-col gap-4 w-full sm:w-80 p-4"
       >
         <div>
           <FloatLabel variant="on">
@@ -315,7 +351,8 @@ const handleCheckAnswers = () => {
                     v-if="areAnswersChecked"
                     :class="[
                       'absolute right-2 top-1/2 -translate-y-1/2 text-sm',
-                      answers[part.index] === correctAnswers[part.index]
+                      answers[part.index]?.toLowerCase() ===
+                      correctAnswers[part.index]?.toLowerCase()
                         ? 'pi pi-thumbs-up text-green-500!'
                         : 'pi pi-thumbs-down text-red-500!',
                     ]"
@@ -356,6 +393,11 @@ const handleCheckAnswers = () => {
           v-if="areAnswersChecked"
           label="Show correct answers"
           @click="showCorrectAnswers = true"
+        />
+        <Button
+          v-if="areAnswersChecked"
+          icon="pi pi-sync"
+          @click="handleReset"
         />
       </div>
     </div>

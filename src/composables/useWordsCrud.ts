@@ -25,8 +25,11 @@ import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue";
 import type { Word, WordCategory } from "@/type/interfaces";
 import { ref } from "vue";
+import { storeToRefs } from "pinia";
+import { useGlobalStore } from "@/stores/GlobalStore";
 
 export const useWordsCrud = () => {
+  const { statistics } = storeToRefs(useGlobalStore());
   const { uid } = useAuth();
   const stats = useStatisticsStore();
   const toast = useToast();
@@ -99,7 +102,9 @@ export const useWordsCrud = () => {
       });
     } finally {
       await stats.updateDayStreak();
-      const daysAdvancement = await stats.checkAndGetDayAdvancement();
+      const daysAdvancement = await stats.checkAndGetDayAdvancement(
+        statistics.value?.advancements ?? []
+      );
       if (daysAdvancement) {
         toast.add({
           severity: "success",
