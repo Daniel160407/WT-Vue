@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SentencePart } from "@/type/interfaces";
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import {
   GEMINI,
   WORD_LEVEL_COOKIE,
@@ -22,9 +22,14 @@ import {
 } from "primevue";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
+import { useExerciseStore } from "@/stores/useExerciseStore";
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { words } = storeToRefs(useGlobalStore());
+const exerciseStore = useExerciseStore();
+const { generatedSentences, sentencesCorrectAnswers, userSentencesAnswers } =
+  storeToRefs(exerciseStore);
+const { saveSentencesData } = exerciseStore;
 
 const sentences = ref<string[]>([]);
 const editedSentences = ref<string[]>([]);
@@ -216,6 +221,26 @@ const handleReset = () => {
 
   shuffledCorrectAnswers.value = shuffleArray(correctAnswers.value);
 };
+
+onMounted(() => {
+  if (generatedSentences.value.length && sentencesCorrectAnswers.value.length) {
+    sentences.value = [...generatedSentences.value];
+    correctAnswers.value = [...sentencesCorrectAnswers.value];
+    answers.value = [...userSentencesAnswers.value];
+
+    editedSentences.value = handleGeneratedSentencesEdit(
+      generatedSentences.value
+    );
+
+    shuffledCorrectAnswers.value = shuffleArray(sentencesCorrectAnswers.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (sentences.value.length) {
+    saveSentencesData(sentences.value, correctAnswers.value, answers.value);
+  }
+});
 </script>
 
 <template>

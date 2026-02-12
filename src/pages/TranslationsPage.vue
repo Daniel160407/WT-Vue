@@ -7,7 +7,7 @@ import {
   WORDS_CATEGORY,
 } from "@/composables/constants";
 import { Button, FloatLabel, InputText, Select } from "primevue";
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import type {
   DictionaryWord,
@@ -20,12 +20,24 @@ import { useToast } from "primevue/usetoast";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { storeToRefs } from "pinia";
 import { useWordsCrud } from "@/composables/useWordsCrud";
+import { useExerciseStore } from "@/stores/useExerciseStore";
 
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
 const { fetchTranslationsPageWords } = useWordsCrud();
 const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
+const exerciseStore = useExerciseStore();
+const {
+  translationWords,
+  translationUserInputs,
+  translationResults,
+  translationLanguage,
+  translationCategory,
+  translationCapital,
+} = storeToRefs(exerciseStore);
+
+const { saveTranslationExercise } = exerciseStore;
 
 const selectedLanguage = ref<Language>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
@@ -95,7 +107,7 @@ const handleFetchDictionaryWords = async () => {
 };
 
 const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
-  if (!uid.value) return;
+  if (!uid.value || translationWords.value.length) return;
 
   try {
     showCapitals.value = category === DICTIONARY_CATEGORY;
@@ -171,6 +183,35 @@ watch(
   },
   { immediate: true }
 );
+
+onMounted(() => {
+  if (translationWords.value.length) {
+    words.value = [...translationWords.value];
+    translations.value = { ...translationUserInputs.value };
+    results.value = { ...translationResults.value };
+
+    selectedLanguage.value = translationLanguage.value as any;
+
+    if (translationCategory.value) {
+      wordCategory.value = translationCategory.value;
+    }
+
+    selectedCapital.value = translationCapital.value;
+  }
+});
+
+onBeforeUnmount(() => {
+  if (!words.value.length) return;
+
+  saveTranslationExercise(
+    [...words.value],
+    { ...translations.value },
+    { ...results.value },
+    selectedLanguage.value,
+    wordCategory.value,
+    selectedCapital.value
+  );
+});
 </script>
 
 <template>
