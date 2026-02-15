@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Avatar, Menu, Menubar } from "primevue";
+import { Avatar, ConfirmDialog, Menu, Menubar } from "primevue";
 import Toast from "primevue/toast";
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -11,6 +11,7 @@ import {
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
   HOME_LABEL,
+  LANGUAGES_ROUTE,
   SENTENCES_LABEL,
   SENTENCES_ROUTE,
   STATISTICS_LABEL,
@@ -38,6 +39,14 @@ const avatarSrc = computed(() => {
 });
 
 const userMenuItems = ref([
+  {
+    label: "languages",
+    icon: "pi pi-language",
+    command: () => router.push(LANGUAGES_ROUTE),
+  },
+  {
+    separator: true,
+  },
   {
     label: "Logout",
     icon: "pi pi-sign-out",
@@ -136,6 +145,8 @@ watch(
     <Toast
       class="right-0 left-0 mx-auto w-full max-w-[100vw] px-2 [&_.p-toast-message]:max-w-full [&_.p-toast-message]:rounded-xl [&_.p-toast-message]:wrap-break-word [&_.p-toast-message]:whitespace-normal"
     />
+
+    <ConfirmDialog class="mx-2" />
 
     <router-view />
   </div>

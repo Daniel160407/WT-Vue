@@ -1,25 +1,31 @@
-import type { WordForm } from "@/type/interfaces";
+import { ref, computed } from "vue";
+import { storeToRefs } from "pinia";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../firebase";
 import { DICTIONARY, WORDS } from "./constants";
 import { useToast } from "primevue";
-import { ref } from "vue";
 import { useStatisticsStore } from "../stores/useStatisticsStore";
-import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
+import { useAuth } from "@/composables/useAuth";
+import type { WordForm } from "@/type/interfaces";
 
 export const useAddWordsCrud = () => {
-  const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
-  const stats = useStatisticsStore();
+  const globalStore = useGlobalStore();
+  const { statistics, dictionaryWords } = storeToRefs(globalStore);
+  const { languageId } = useAuth();
+  const statsStore = useStatisticsStore();
   const toast = useToast();
 
   const saving = ref(false);
+
+  const currentLangStats = computed(() =>
+    statistics.value.find((s) => s.language_id === languageId.value)
+  );
 
   const normalizeWord = (value: string) => value.toLowerCase().trim();
 
   const checkIfWordAlreadyExistsInDictionary = (word: WordForm): boolean => {
     const normalizedNew = normalizeWord(word.word);
-
     return dictionaryWords.value.some(
       (w) =>
         normalizeWord(w.word) === normalizedNew &&
@@ -28,9 +34,32 @@ export const useAddWordsCrud = () => {
     );
   };
 
-  const addWord: (word: WordForm) => Promise<void> = async (word: WordForm) => {
-    saving.value = true;
+  const processAdvancements = async () => {
+    const advancements = currentLangStats.value?.advancements ?? [];
 
+    const dayAdv = await statsStore.checkAndGetDayAdvancement(advancements);
+    if (dayAdv) {
+      toast.add({
+        severity: "success",
+        summary: "Advancement made!",
+        detail: dayAdv,
+        life: 6000,
+      });
+    }
+
+    const wordAdv = await statsStore.checkAndGetWordsAdvancement(advancements);
+    if (wordAdv) {
+      toast.add({
+        severity: "success",
+        summary: "Advancement made!",
+        detail: wordAdv,
+        life: 6000,
+      });
+    }
+  };
+
+  const addWord = async (word: WordForm) => {
+    saving.value = true;
     try {
       await addDoc(collection(db, WORDS), word);
 
@@ -43,39 +72,20 @@ export const useAddWordsCrud = () => {
           user_id: word.user_id,
           language_id: word.language_id,
         });
-        await stats.increaseWordsLearned();
-      }
-      await stats.updateDayStreak();
-
-      const dayAdv = await stats.checkAndGetDayAdvancement(
-        statistics.value?.advancements ?? []
-      );
-      if (dayAdv) {
-        toast.add({
-          severity: "success",
-          summary: "Advancement made!",
-          detail: dayAdv,
-          life: 6000,
-        });
+        await statsStore.increaseWordsLearned();
       }
 
-      const wordAdv = await stats.checkAndGetWordsAdvancement(
-        statistics.value?.advancements ?? []
-      );
-      if (wordAdv) {
-        toast.add({
-          severity: "success",
-          summary: "Advancement made!",
-          detail: wordAdv,
-          life: 6000,
-        });
-      }
+      await statsStore.updateDayStreak();
+
+      await globalStore.fetchStatistics();
+
+      await processAdvancements();
     } catch (error) {
       console.error(error);
       toast.add({
         severity: "error",
         summary: "Save failed",
-        detail: "Could not save the word. Please try again.",
+        detail: "Could not save the word.",
         life: 4000,
       });
     } finally {
@@ -84,57 +94,8 @@ export const useAddWordsCrud = () => {
   };
 
   const addAIWord = async (word: WordForm) => {
-    saving.value = true;
-
-    try {
-      await addDoc(collection(db, WORDS), word);
-
-      if (!checkIfWordAlreadyExistsInDictionary(word)) {
-        await addDoc(collection(db, DICTIONARY), word);
-        await stats.increaseWordsLearned();
-      }
-      await stats.updateDayStreak();
-
-      const dayAdv = await stats.checkAndGetDayAdvancement(
-        statistics.value?.advancements ?? []
-      );
-      if (dayAdv) {
-        toast.add({
-          severity: "success",
-          summary: "Advancement made!",
-          detail: dayAdv,
-          life: 6000,
-        });
-      }
-
-      const wordAdv = await stats.checkAndGetWordsAdvancement(
-        statistics.value?.advancements ?? []
-      );
-      if (wordAdv) {
-        toast.add({
-          severity: "success",
-          summary: "Advancement made!",
-          detail: wordAdv,
-          life: 6000,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      toast.add({
-        severity: "error",
-        summary: "Save failed",
-        detail: "Could not save the word. Please try again.",
-        life: 4000,
-      });
-    } finally {
-      saving.value = false;
-    }
+    await addWord(word);
   };
 
-  return {
-    saving,
-
-    addWord,
-    addAIWord,
-  };
+  return { saving, addWord, addAIWord };
 };

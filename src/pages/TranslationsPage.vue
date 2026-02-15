@@ -11,7 +11,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import type {
   DictionaryWord,
-  Language,
+  LanguageVersion,
   Word,
   WordCategory,
 } from "@/type/interfaces";
@@ -22,11 +22,14 @@ import { storeToRefs } from "pinia";
 import { useWordsCrud } from "@/composables/useWordsCrud";
 import { useExerciseStore } from "@/stores/useExerciseStore";
 
-const { uid } = useAuth();
+const { uid, languageId } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
+const globalStore = useGlobalStore();
 const { fetchTranslationsPageWords } = useWordsCrud();
-const { statistics, dictionaryWords } = storeToRefs(useGlobalStore());
+const { fetchStatistics } = globalStore;
+const { statistics, dictionaryWords } = storeToRefs(globalStore);
+
 const exerciseStore = useExerciseStore();
 const {
   translationWords,
@@ -39,7 +42,7 @@ const {
 
 const { saveTranslationExercise } = exerciseStore;
 
-const selectedLanguage = ref<Language>("DEU");
+const selectedLanguage = ref<LanguageVersion>("DEU");
 const wordCategory = ref<{ name: string; code: WordCategory }>({
   name: "Words",
   code: WORDS_CATEGORY,
@@ -51,6 +54,10 @@ const results = ref<Record<string, boolean>>({});
 
 const showCapitals = ref(false);
 const selectedCapital = ref<string>("A");
+
+const currentLangStats = computed(() =>
+  statistics.value.find((s) => s.language_id === languageId.value)
+);
 
 const correctAnswersCount = computed(() => {
   return Object.values(results.value).filter(Boolean).length;
@@ -97,7 +104,6 @@ const normalizeWord = (input: string): string => {
 const handleFetchDictionaryWords = async () => {
   words.value = dictionaryWords.value.filter((item) => {
     const cleanedWord = normalizeWord(item.word);
-
     return cleanedWord
       .toUpperCase()
       .startsWith(selectedCapital.value.toUpperCase());
@@ -119,7 +125,6 @@ const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
     }
 
     words.value = shuffleArray((await fetchTranslationsPageWords()) ?? []);
-
     resetInputs();
   } catch (error) {
     console.error("fetchWords error:", error);
@@ -131,7 +136,6 @@ const checkAnswers = async () => {
 
   words.value.forEach((word) => {
     const userInput = translations.value[word.id]?.trim().toLowerCase();
-
     const correctAnswer =
       selectedLanguage.value === "GEO" ? word.meaning : word.word;
 
@@ -139,10 +143,14 @@ const checkAnswers = async () => {
       userInput === (correctAnswer || "").trim().toLowerCase();
   });
 
-  stats.updateDayStreak();
+  await stats.updateDayStreak();
+  await fetchStatistics();
+
+  const advancementsList = currentLangStats.value?.advancements ?? [];
   const daysAdvancement = await stats.checkAndGetDayAdvancement(
-    statistics.value?.advancements ?? []
+    advancementsList
   );
+
   if (daysAdvancement) {
     toast.add({
       severity: "success",

@@ -1,22 +1,16 @@
 <script setup lang="ts">
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { onMounted, ref, watch } from "vue";
-import { db } from "../../firebase";
-import {
-  Advancements,
-  DICTIONARY,
-  groupedAdvancements,
-  USER_ID,
-} from "@/composables/constants";
+import { ref, watch, computed } from "vue";
+import { Advancements, groupedAdvancements } from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
-import type { DictionaryWord, LevelStats, WordLevel } from "@/type/interfaces";
+import type { LevelStats, WordLevel } from "@/type/interfaces";
 import { Button } from "primevue";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 
-const { uid } = useAuth();
-const { statistics } = storeToRefs(useGlobalStore());
-const { fetchStatistics } = useGlobalStore();
+const { uid, languageId } = useAuth();
+const globalStore = useGlobalStore();
+const { statistics, dictionaryWords } = storeToRefs(globalStore);
+const { fetchStatistics } = globalStore;
 
 const emptyLevelStats = (): LevelStats => ({
   A1: 0,
@@ -27,32 +21,27 @@ const emptyLevelStats = (): LevelStats => ({
   C2: 0,
 });
 
-const wordsLearned = ref<number>(0);
-const cyclesCompleted = ref<number>(0);
-const dayStreak = ref<number>(0);
-const advancements = ref<string[]>([]);
 const wordLevelContribution = ref<LevelStats>(emptyLevelStats());
 const showAllAdvancements = ref<boolean>(false);
 const allAdvancements = ref<string[]>([]);
 
-const fetchWords = async () => {
-  if (!uid.value) return;
+const currentStats = computed(() =>
+  statistics.value.find((s) => s.language_id === languageId.value)
+);
 
-  wordsLearned.value = 0;
+const wordsLearned = computed(() => currentStats.value?.words_learned ?? 0);
+const cyclesCompleted = computed(() => currentStats.value?.cycles ?? 0);
+const dayStreak = computed(() => currentStats.value?.days ?? 0);
+const advancements = computed(() => currentStats.value?.advancements ?? []);
+
+const fetchWords = async () => {
+  if (!uid.value || !languageId.value) return;
+
   wordLevelContribution.value = emptyLevelStats();
 
   try {
-    const snapshot = await getDocs(
-      query(collection(db, DICTIONARY), where(USER_ID, "==", uid.value))
-    );
-
-    const words: DictionaryWord[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<DictionaryWord, "id">),
-    }));
-
-    for (const { level } of words) {
-      if (level in wordLevelContribution.value) {
+    for (const { level } of dictionaryWords.value) {
+      if (level && level in wordLevelContribution.value) {
         wordLevelContribution.value[level as WordLevel]++;
       }
     }
@@ -71,25 +60,16 @@ const handleShowAllAdvancements = () => {
 const hasAdvancement = (advancement: string) =>
   advancements.value.includes(advancement);
 
-watch(uid, async (newUid) => {
-  if (newUid) {
-    await fetchWords();
-    await fetchStatistics();
-    wordsLearned.value = statistics.value?.words_learned ?? 0;
-    cyclesCompleted.value = statistics.value?.cycles ?? 0;
-    dayStreak.value = statistics.value?.days ?? 0;
-    advancements.value = statistics.value?.advancements ?? [];
-  }
-});
-
-onMounted(() => {
-  if (statistics.value) {
-    wordsLearned.value = statistics.value?.words_learned ?? 0;
-    cyclesCompleted.value = statistics.value?.cycles ?? 0;
-    dayStreak.value = statistics.value?.days ?? 0;
-    advancements.value = statistics.value?.advancements ?? [];
-  }
-});
+watch(
+  [uid, languageId, dictionaryWords],
+  async ([newUid, newLang, dictionaryWords]) => {
+    if (newUid && newLang && dictionaryWords) {
+      await fetchWords();
+      await fetchStatistics();
+    }
+  },
+  { immediate: true }
+);
 </script>
 <template>
   <div class="flex flex-col items-center gap-8 px-4">
@@ -251,6 +231,7 @@ onMounted(() => {
         </h2>
 
         <Button
+          v-if="advancements.length"
           icon="pi pi-eye"
           label="Show all"
           severity="secondary"
@@ -286,7 +267,9 @@ onMounted(() => {
       </div>
 
       <div
-        v-else-if="advancements.length && showAllAdvancements"
+        v-else-if="
+          (advancements.length && showAllAdvancements) || !advancements.length
+        "
         class="grid grid-cols-1 md:grid-cols-3 gap-8"
       >
         <div class="flex flex-col gap-4">

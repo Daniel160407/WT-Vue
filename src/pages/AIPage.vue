@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, nextTick, onMounted, onBeforeUnmount, computed } from "vue";
 import { Button, InputText, Message } from "primevue";
 import { useToast } from "primevue/usetoast";
 import { GEMINI } from "@/composables/constants";
@@ -9,13 +9,17 @@ import { useGeminiChat } from "@/composables/useGeminiChat";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { useExerciseStore } from "@/stores/useExerciseStore";
+import { useAuth } from "@/composables/useAuth";
 
+const { languageId } = useAuth();
 const exerciseStore = useExerciseStore();
 const { AIMessages } = storeToRefs(exerciseStore);
 const { saveAIMessages } = exerciseStore;
 
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
-const { statistics } = storeToRefs(useGlobalStore());
+const globalStore = useGlobalStore();
+const { statistics } = storeToRefs(globalStore);
+const { fetchStatistics } = globalStore;
 const stats = useStatisticsStore();
 const toast = useToast();
 
@@ -23,6 +27,10 @@ const prompt = ref("");
 
 const chatContainer = ref<HTMLElement | null>(null);
 const showScrollDown = ref(false);
+
+const currentLangStats = computed(() =>
+  statistics.value.find((s) => s.language_id === languageId.value)
+);
 
 const submit = async () => {
   if (!prompt.value.trim()) return;
@@ -34,9 +42,14 @@ const submit = async () => {
   await scrollToBottom();
 
   await stats.updateDayStreak();
+
+  await fetchStatistics();
+
+  const advancementsList = currentLangStats.value?.advancements ?? [];
   const daysAdvancement = await stats.checkAndGetDayAdvancement(
-    statistics.value?.advancements ?? []
+    advancementsList
   );
+
   if (daysAdvancement) {
     toast.add({
       severity: "success",

@@ -22,6 +22,7 @@ export const SENTENCES_ROUTE = "/sentences";
 export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
 export const STATISTICS_ROUTE = "/statistics";
+export const LANGUAGES_ROUTE = "/languages";
 
 //firebase
 export const WORDS = "words";
@@ -30,6 +31,7 @@ export const USERS = "users";
 export const DICTIONARY = "dictionary";
 export const STATISTICS = "statistics";
 export const MESSAGES = "messages";
+export const LANGUAGES = "languages";
 
 export const WORD_TYPE = "word_type";
 export const ACTIVE = "active";
@@ -50,6 +52,34 @@ export const WORD_LEVEL_OPTIONS = [
   { name: "C1", code: "C1" },
   { name: "C2", code: "C2" },
 ];
+export const LANGUAGE_OPTIONS = [
+  { name: "Arabic", code: "SA" },
+  { name: "Armenian", code: "AM" },
+  { name: "Azerbaijani", code: "AZ" },
+  { name: "Chinese", code: "CN" },
+  { name: "Czech", code: "CZ" },
+  { name: "Dutch", code: "NL" },
+  { name: "English (UK)", code: "GB" },
+  { name: "English (US)", code: "US" },
+  { name: "French", code: "FR" },
+  { name: "Georgian", code: "GE" },
+  { name: "German", code: "DE" },
+  { name: "Greek", code: "GR" },
+  { name: "Hindi", code: "IN" },
+  { name: "Hungarian", code: "HU" },
+  { name: "Italian", code: "IT" },
+  { name: "Japanese", code: "JP" },
+  { name: "Korean", code: "KR" },
+  { name: "Norwegian", code: "NO" },
+  { name: "Polish", code: "PL" },
+  { name: "Portuguese", code: "PT" },
+  { name: "Romanian", code: "RO" },
+  { name: "Russian", code: "RU" },
+  { name: "Spanish", code: "ES" },
+  { name: "Swedish", code: "SE" },
+  { name: "Turkish", code: "TR" },
+  { name: "Ukrainian", code: "UA" },
+];
 export const WORD_CATEGORIES = [
   { name: "All", code: "all" },
   { name: "Words", code: "word" },
@@ -57,6 +87,8 @@ export const WORD_CATEGORIES = [
   { name: "Dropped words", code: "dropped" },
   { name: "Dictionary", code: "dictionary" },
 ];
+
+//constant arrays
 export const CAPITALS = [
   "A",
   "B",
@@ -102,6 +134,7 @@ export const UID = "uid";
 export const NAME = "name";
 export const PHOTO_URL = "photoURL";
 export const WORD_LEVEL_COOKIE = "word_level";
+export const LANGUAGE_ID_COOKIE = "language_id";
 
 //AI
 export const GEMINI_MODEL = "gemini-2.5-flash";

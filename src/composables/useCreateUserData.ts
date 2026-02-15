@@ -8,15 +8,20 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../../firebase";
-import { LEVEL, STATISTICS } from "./constants";
+import { LANGUAGE_ID, LEVEL, STATISTICS, USER_ID } from "./constants";
 import type { Level, Statistics } from "@/type/interfaces";
+import { ref } from "vue";
 
 export const useCreateUserData = () => {
-  const createLevelForUser = async (userId: string, languageId: number = 1) => {
+  const saving = ref(false);
+
+  const createLevelForUser = async (userId: string, languageId: string) => {
+    saving.value = true;
     try {
       const levelQuery = query(
         collection(db, LEVEL),
-        where("user_id", "==", userId)
+        where(USER_ID, "==", userId),
+        where(LANGUAGE_ID, "==", languageId)
       );
       const snap = await getDocs(levelQuery);
 
@@ -25,23 +30,27 @@ export const useCreateUserData = () => {
         const level: Omit<Level, "id"> = {
           level: 1,
           user_id: userId,
-          language_id: languageId as any,
+          language_id: languageId,
         };
         await setDoc(levelRef, level);
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      saving.value = false;
     }
   };
 
   const createStatisticsForUser = async (
     userId: string,
-    languageId: number = 1
+    languageId: string
   ) => {
+    saving.value = true;
     try {
       const statisticsQuery = query(
         collection(db, STATISTICS),
-        where("user_id", "==", userId)
+        where(USER_ID, "==", userId),
+        where(LANGUAGE_ID, "==", languageId)
       );
       const snap = await getDocs(statisticsQuery);
 
@@ -54,17 +63,16 @@ export const useCreateUserData = () => {
           advancements: [],
           last_activity: Timestamp.fromDate(new Date()),
           user_id: userId,
-          language_id: languageId as any,
+          language_id: languageId,
         };
-        await setDoc(statisticsRef, stats, { merge: true });
+        await setDoc(statisticsRef, stats);
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      saving.value = false;
     }
   };
 
-  return {
-    createLevelForUser,
-    createStatisticsForUser,
-  };
+  return { saving, createLevelForUser, createStatisticsForUser };
 };

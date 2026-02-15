@@ -12,7 +12,12 @@ import {
   type DocumentData,
   arrayUnion,
 } from "firebase/firestore";
-import { Advancements, STATISTICS, USER_ID } from "@/composables/constants";
+import {
+  Advancements,
+  LANGUAGE_ID,
+  STATISTICS,
+  USER_ID,
+} from "@/composables/constants";
 import { useAuth } from "@/composables/useAuth";
 import { db } from "../../firebase";
 import type { Advancement } from "@/type/interfaces";
@@ -29,14 +34,15 @@ export const useStatisticsStore = defineStore("statistics", {
 
   actions: {
     async fetchStatistics() {
-      const { uid } = useAuth();
+      const { uid, languageId } = useAuth();
       if (!uid.value) return null;
 
       this.loading = true;
 
       const q = query(
         collection(db, STATISTICS),
-        where(USER_ID, "==", uid.value)
+        where(USER_ID, "==", uid.value),
+        where(LANGUAGE_ID, "==", languageId.value)
       );
 
       const snapshot = await getDocs(q);

@@ -3,6 +3,7 @@ import type {
   DictionaryWord,
   Statistics,
   Word,
+  Language,
 } from "@/type/interfaces";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { defineStore } from "pinia";
@@ -11,6 +12,8 @@ import { db } from "../../firebase";
 import {
   ACTIVE,
   DICTIONARY,
+  LANGUAGE_ID,
+  LANGUAGES,
   LEVEL,
   STATISTICS,
   USER_ID,
@@ -21,20 +24,22 @@ import { useAuth } from "@/composables/useAuth";
 import { useToast } from "primevue";
 
 export const useGlobalStore = defineStore("globalStore", () => {
-  const { uid } = useAuth();
+  const { uid, languageId } = useAuth();
   const toast = useToast();
 
   const words = ref<Word[]>([]);
   const dictionaryWords = ref<DictionaryWord[]>([]);
-  const statistics = ref<Statistics | null>(null);
+  const statistics = ref<Statistics[]>([]);
   const level = ref<Level | null>(null);
+  const languages = ref<Language[]>([]);
 
   const createWordsQuery = (wordType: string, active: boolean) =>
     query(
       collection(db, WORDS),
       where(WORD_TYPE, "==", wordType),
       where(ACTIVE, "==", active),
-      where(USER_ID, "==", uid.value)
+      where(USER_ID, "==", uid.value),
+      where(LANGUAGE_ID, "==", languageId.value)
     );
 
   const mapWords = (snapshot: any): Word[] =>
@@ -61,7 +66,11 @@ export const useGlobalStore = defineStore("globalStore", () => {
   const fetchDictionaryWords = async () => {
     try {
       const snapshot = await getDocs(
-        query(collection(db, DICTIONARY), where(USER_ID, "==", uid.value))
+        query(
+          collection(db, DICTIONARY),
+          where(USER_ID, "==", uid.value),
+          where(LANGUAGE_ID, "==", languageId.value)
+        )
       );
 
       dictionaryWords.value = snapshot.docs.map((doc) => ({
@@ -84,10 +93,10 @@ export const useGlobalStore = defineStore("globalStore", () => {
       const snapshot = await getDocs(
         query(collection(db, STATISTICS), where(USER_ID, "==", uid.value))
       );
-      const statsDoc = snapshot.docs[0];
-      statistics.value = statsDoc
-        ? { id: statsDoc.id, ...(statsDoc.data() as Omit<Statistics, "id">) }
-        : null;
+      statistics.value = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Statistics, "id">),
+      }));
     } catch (err) {
       console.error(err);
       toast.add({
@@ -102,7 +111,11 @@ export const useGlobalStore = defineStore("globalStore", () => {
   const fetchLevel = async () => {
     try {
       const snapshot = await getDocs(
-        query(collection(db, LEVEL), where(USER_ID, "==", uid.value))
+        query(
+          collection(db, LEVEL),
+          where(USER_ID, "==", uid.value),
+          where(LANGUAGE_ID, "==", languageId.value)
+        )
       );
 
       if (snapshot.empty) {
@@ -125,12 +138,35 @@ export const useGlobalStore = defineStore("globalStore", () => {
       });
     }
   };
+
+  const fetchLanguages = async () => {
+    try {
+      const snapshot = await getDocs(
+        query(collection(db, LANGUAGES), where(USER_ID, "==", uid.value))
+      );
+
+      languages.value = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Language, "id">),
+      }));
+    } catch (err) {
+      console.error(err);
+      toast.add({
+        severity: "error",
+        summary: "Error appeared",
+        detail: "Languages could not be fetched",
+        life: 3000,
+      });
+    }
+  };
+
   const setData = async () => {
     await Promise.allSettled([
       fetchWords("word"),
       fetchDictionaryWords(),
       fetchStatistics(),
       fetchLevel(),
+      fetchLanguages(),
     ]);
   };
 
@@ -139,6 +175,7 @@ export const useGlobalStore = defineStore("globalStore", () => {
     dictionaryWords,
     statistics,
     level,
+    languages,
 
     setData,
 
@@ -146,5 +183,6 @@ export const useGlobalStore = defineStore("globalStore", () => {
     fetchDictionaryWords,
     fetchStatistics,
     fetchLevel,
+    fetchLanguages,
   };
 });

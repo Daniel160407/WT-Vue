@@ -17,6 +17,7 @@ import {
   DROPPED_WORDS_CATEGORY,
   IRREGULAR_VERBS_CATEGORY,
   USER_ID,
+  LANGUAGE_ID,
   WORD_TYPE,
   WORDS,
   WORDS_CATEGORY,
@@ -24,28 +25,34 @@ import {
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue";
 import type { Word, WordCategory } from "@/type/interfaces";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 
 export const useWordsCrud = () => {
-  const { statistics } = storeToRefs(useGlobalStore());
-  const { uid } = useAuth();
+  const globalStore = useGlobalStore();
+  const { statistics } = storeToRefs(globalStore);
+  const { fetchStatistics } = globalStore;
+  const { uid, languageId } = useAuth();
   const stats = useStatisticsStore();
   const toast = useToast();
 
   const saving = ref(false);
 
+  const currentLangStats = computed(() =>
+    statistics.value.find((s) => s.language_id === languageId.value)
+  );
+
   const reactivateInactiveWords = async (): Promise<boolean> => {
-    if (!uid.value) return false;
+    if (!uid.value || !languageId.value) return false;
 
     saving.value = true;
-
     try {
       const wordsSnapshot = await getDocs(
         query(
           collection(db, WORDS),
           where(USER_ID, "==", uid.value),
+          where(LANGUAGE_ID, "==", languageId.value),
           where(ACTIVE, "==", false)
         )
       );
@@ -77,6 +84,7 @@ export const useWordsCrud = () => {
     checkedWordIds: Set<string>,
     totalWordsQuantity: number
   ) => {
+    if (!uid.value || !languageId.value) return;
     saving.value = true;
 
     try {
@@ -84,27 +92,22 @@ export const useWordsCrud = () => {
       checkedWordIds.forEach((id) =>
         batch.update(doc(db, WORDS, id), { active: false })
       );
-
       await batch.commit();
 
+      let allDropped = false;
       if (totalWordsQuantity - checkedWordIds.size === 0) {
-        await reactivateInactiveWords();
-        return true;
+        allDropped = await reactivateInactiveWords();
       }
-      return false;
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error appeared",
-        detail: "Could not drop words to the next level",
-        life: 3000,
-      });
-    } finally {
+
       await stats.updateDayStreak();
+
+      await fetchStatistics();
+
+      const advancements = currentLangStats.value?.advancements ?? [];
       const daysAdvancement = await stats.checkAndGetDayAdvancement(
-        statistics.value?.advancements ?? []
+        advancements
       );
+
       if (daysAdvancement) {
         toast.add({
           severity: "success",
@@ -114,6 +117,16 @@ export const useWordsCrud = () => {
         });
       }
 
+      return allDropped;
+    } catch (err) {
+      console.error(err);
+      toast.add({
+        severity: "error",
+        summary: "Error",
+        detail: "Could not drop words",
+        life: 3000,
+      });
+    } finally {
       saving.value = false;
     }
   };
@@ -157,6 +170,7 @@ export const useWordsCrud = () => {
   };
 
   const deleteAllWords = async () => {
+    if (!uid.value || !languageId.value) return;
     saving.value = true;
 
     try {
@@ -164,7 +178,8 @@ export const useWordsCrud = () => {
         query(
           collection(db, WORDS),
           where(WORD_TYPE, "==", WORDS_CATEGORY),
-          where(USER_ID, "==", uid.value)
+          where(USER_ID, "==", uid.value),
+          where(LANGUAGE_ID, "==", languageId.value)
         )
       );
 
@@ -188,31 +203,37 @@ export const useWordsCrud = () => {
   };
 
   const buildWordsQuery = (category: string): Query | null => {
-    if (!uid.value) return null;
+    if (!uid.value || !languageId.value) return null;
+
+    const baseColl = collection(db, WORDS);
+    const userLangConstraint = [
+      where(USER_ID, "==", uid.value),
+      where(LANGUAGE_ID, "==", languageId.value),
+    ];
 
     switch (category) {
       case WORDS_CATEGORY:
       case DROPPED_WORDS_CATEGORY:
         return query(
-          collection(db, WORDS),
+          baseColl,
+          ...userLangConstraint,
           where(WORD_TYPE, "==", WORDS_CATEGORY),
-          where(ACTIVE, "==", category === WORDS_CATEGORY),
-          where(USER_ID, "==", uid.value)
+          where(ACTIVE, "==", category === WORDS_CATEGORY)
         );
 
       case IRREGULAR_VERBS_CATEGORY:
         return query(
-          collection(db, WORDS),
+          baseColl,
+          ...userLangConstraint,
           where(WORD_TYPE, "==", IRREGULAR_VERBS_CATEGORY),
-          where(ACTIVE, "==", true),
-          where(USER_ID, "==", uid.value)
+          where(ACTIVE, "==", true)
         );
 
       case ALL_CATEGORY:
         return query(
-          collection(db, WORDS),
-          where(WORD_TYPE, "==", WORDS_CATEGORY),
-          where(USER_ID, "==", uid.value)
+          baseColl,
+          ...userLangConstraint,
+          where(WORD_TYPE, "==", WORDS_CATEGORY)
         );
 
       default:

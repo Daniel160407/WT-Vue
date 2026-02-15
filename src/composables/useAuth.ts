@@ -10,20 +10,30 @@ import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import router from "./router";
 import type { AppUser } from "@/type/interfaces";
 import Cookies from "js-cookie";
-import { NAME, PHOTO_URL, UID, USERS, WORDS_ROUTE } from "./constants";
-import { useCreateUserData } from "./useCreateUserData";
+import {
+  LANGUAGE_ID_COOKIE,
+  NAME,
+  PHOTO_URL,
+  UID,
+  USERS,
+  WORDS_ROUTE,
+} from "./constants";
 
 const user = ref<FirebaseUser | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const languageId = ref(Cookies.get(LANGUAGE_ID_COOKIE) ?? null);
 
 const uid = computed(() => user.value?.uid ?? null);
 const photoURL = computed(() => user.value?.photoURL ?? null);
 const displayName = computed(() => user.value?.displayName ?? null);
 
-export function useAuth() {
-  const { createLevelForUser, createStatisticsForUser } = useCreateUserData();
+const setLanguageId = (id: string) => {
+  Cookies.set(LANGUAGE_ID_COOKIE, id);
+  languageId.value = id;
+};
 
+export function useAuth() {
   const checkIfUserIsRegistered = async (
     firebaseUser: FirebaseUser
   ): Promise<boolean> => {
@@ -55,9 +65,6 @@ export function useAuth() {
       Cookies.set(UID, firebaseUser.uid);
       Cookies.set(NAME, firebaseUser.displayName || "");
       Cookies.set(PHOTO_URL, firebaseUser.photoURL || "");
-
-      await createLevelForUser(firebaseUser.uid);
-      await createStatisticsForUser(firebaseUser.uid);
 
       router.push(WORDS_ROUTE);
     } catch (err) {
@@ -94,9 +101,6 @@ export function useAuth() {
       }
 
       user.value = firebaseUser;
-
-      await createLevelForUser(firebaseUser.uid);
-      await createStatisticsForUser(firebaseUser.uid);
     } finally {
       loading.value = false;
     }
@@ -107,9 +111,11 @@ export function useAuth() {
     photoURL,
     displayName,
     uid,
+    languageId,
     loading,
     error,
     signInWithGoogle,
     logout,
+    setLanguageId,
   };
 }

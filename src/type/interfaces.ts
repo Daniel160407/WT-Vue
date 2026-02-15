@@ -1,7 +1,7 @@
 import type { Advancements } from "@/composables/constants";
 import type { Timestamp } from "firebase/firestore";
 
-export type Language = "GEO" | "DEU";
+export type LanguageVersion = "GEO" | "DEU";
 
 export type WordLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
@@ -31,7 +31,7 @@ export interface Word {
   active: boolean;
   level: WordLevel;
   user_id: string;
-  language_id: Language;
+  language_id: string;
 }
 
 export interface DictionaryWord {
@@ -41,7 +41,7 @@ export interface DictionaryWord {
   example: string;
   level: WordLevel;
   user_id: string;
-  language_id: Language;
+  language_id: string;
 }
 
 export interface AppUser {
@@ -58,7 +58,7 @@ export interface Level {
   id: string;
   level: number;
   user_id: string;
-  language_id: Language;
+  language_id: string;
 }
 
 export interface MessageObj {
@@ -76,7 +76,7 @@ export interface Statistics {
   advancements: string[];
   last_activity: Timestamp;
   user_id: string;
-  language_id: Language;
+  language_id: string;
 }
 
 export interface WordForm {
@@ -88,4 +88,11 @@ export interface WordForm {
   active: boolean;
   user_id: string;
   language_id: string;
+}
+
+export interface Language {
+  id: string;
+  name: string;
+  abbreviation: string;
+  user_id: string;
 }

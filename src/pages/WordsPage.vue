@@ -6,7 +6,6 @@ import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import {
-  ConfirmDialog,
   Dialog,
   FloatLabel,
   InputText,
@@ -270,7 +269,6 @@ watch(words, () => {
               v-if="showWordOperations && word.id === selectedWordOperationsId"
               class="flex flex-row md:flex-col items-center gap-2 mt-2 md:mt-0"
             >
-              <ConfirmDialog />
               <Button
                 icon="pi pi-trash"
                 severity="danger"
