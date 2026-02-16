@@ -15,7 +15,7 @@ import { Dialog, Select, Button, useConfirm } from "primevue";
 import { useCreateUserData } from "@/composables/useCreateUserData";
 import { useAuth } from "@/composables/useAuth";
 
-const { uid, setLanguageId, signInWithGoogle } = useAuth();
+const { uid, setLanguageId } = useAuth();
 const confirm = useConfirm();
 const globalStore = useGlobalStore();
 const { languages, statistics } = storeToRefs(globalStore);
