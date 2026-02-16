@@ -36,7 +36,7 @@ const { fetchWords, fetchDictionaryWords } = useGlobalStore();
 
 const parsedAIWords = ref<Word[]>([]);
 const savingIndex = ref<number | null>(null);
-const savingAll = ref(false); // Ref for Save All button state
+const savingAll = ref(false);
 
 const selectedWordType = ref({ name: "Words", code: "word" });
 const selectedLevel = ref({
