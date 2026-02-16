@@ -15,7 +15,7 @@ import { Dialog, Select, Button, useConfirm } from "primevue";
 import { useCreateUserData } from "@/composables/useCreateUserData";
 import { useAuth } from "@/composables/useAuth";
 
-const { uid, setLanguageId } = useAuth();
+const { uid, setLanguageId, signInWithGoogle } = useAuth();
 const confirm = useConfirm();
 const globalStore = useGlobalStore();
 const { languages, statistics } = storeToRefs(globalStore);
@@ -63,7 +63,11 @@ const onLanguageSelect = (code: string) => {
 };
 
 const handleSave = async () => {
-  if (!uid.value || !newLanguage.value.abbreviation) return;
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
+  if (!newLanguage.value.abbreviation) return;
 
   try {
     const createdId = await addLanguage({
