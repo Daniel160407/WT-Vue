@@ -63,29 +63,30 @@ const onLanguageSelect = (code: string) => {
 };
 
 const handleSave = async () => {
-  if (!uid.value) {
-    signInWithGoogle();
-    return;
-  }
-  if (!newLanguage.value.abbreviation) return;
+  if (!uid.value || !newLanguage.value.abbreviation) return;
 
   try {
-    await addLanguage({
+    const createdId = await addLanguage({
       name: newLanguage.value.name,
       abbreviation: newLanguage.value.abbreviation,
     });
 
     await fetchLanguages();
-    const newLanguageId = languages.value.find(
-      (lang) =>
-        lang.name === newLanguage.value.name &&
-        lang.abbreviation === newLanguage.value.abbreviation
-    )?.id;
 
-    await createLevelForUser(uid.value, newLanguageId ?? "");
-    await createStatisticsForUser(uid.value, newLanguageId ?? "");
+    const languageIdToUse =
+      createdId ||
+      languages.value.find(
+        (lang) =>
+          lang.name === newLanguage.value.name &&
+          lang.abbreviation === newLanguage.value.abbreviation
+      )?.id;
+
+    if (!languageIdToUse) throw new Error("Could not retrieve Language ID");
+
+    await createLevelForUser(uid.value, languageIdToUse);
+    await createStatisticsForUser(uid.value, languageIdToUse);
+
     showAddLanguageModal.value = false;
-
     newLanguage.value = { name: "", abbreviation: "" };
   } catch (error) {
     console.error("Save failed:", error);
