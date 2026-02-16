@@ -10,12 +10,7 @@ import {
 import { Button, FloatLabel, InputText, Select } from "primevue";
 import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuth } from "@/composables/useAuth";
-import type {
-  DictionaryWord,
-  LanguageVersion,
-  Word,
-  WordCategory,
-} from "@/type/interfaces";
+import type { DictionaryWord, Word, WordCategory } from "@/type/interfaces";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue/usetoast";
 import { useGlobalStore } from "@/stores/GlobalStore";
@@ -27,9 +22,9 @@ const { uid, languageId } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
 const globalStore = useGlobalStore();
-const { saving, fetchTranslationsPageWords } = useWordsCrud();
+const { fetchTranslationsPageWords } = useWordsCrud();
 const { fetchStatistics } = globalStore;
-const { statistics, dictionaryWords } = storeToRefs(globalStore);
+const { languages, statistics, dictionaryWords } = storeToRefs(globalStore);
 
 const exerciseStore = useExerciseStore();
 const {
@@ -43,7 +38,23 @@ const {
 
 const { saveTranslationExercise } = exerciseStore;
 
-const selectedLanguage = ref<LanguageVersion>("DEU");
+const currentAbbr = computed(() => {
+  const lang = languages.value.find((l) => l.id === languageId.value);
+  return lang?.abbreviation.toUpperCase() ?? "Foreign Language";
+});
+
+const selectedLanguage = ref<string>(currentAbbr.value);
+
+// Watcher to sync the selection once data loads
+watch(currentAbbr, (newVal) => {
+  if (
+    selectedLanguage.value === "Foreign Language" ||
+    !selectedLanguage.value
+  ) {
+    selectedLanguage.value = newVal;
+  }
+});
+
 const wordCategory = ref<{ name: string; code: WordCategory }>({
   name: "Words",
   code: WORDS_CATEGORY,
@@ -143,7 +154,7 @@ const checkAnswers = async () => {
   words.value.forEach((word) => {
     const userInput = translations.value[word.id]?.trim().toLowerCase();
     const correctAnswer =
-      selectedLanguage.value === "GEO" ? word.meaning : word.word;
+      selectedLanguage.value === "NAT" ? word.meaning : word.word;
 
     results.value[word.id] =
       userInput === (correctAnswer || "").trim().toLowerCase();
@@ -205,7 +216,7 @@ onMounted(() => {
     translations.value = { ...translationUserInputs.value };
     results.value = { ...translationResults.value };
 
-    selectedLanguage.value = translationLanguage.value as any;
+    selectedLanguage.value = translationLanguage.value || currentAbbr.value;
 
     if (translationCategory.value) {
       wordCategory.value = translationCategory.value;
@@ -242,8 +253,8 @@ onBeforeUnmount(() => {
             <Select
               v-model="selectedLanguage"
               :options="[
-                { name: 'Georgian', code: 'GEO' },
-                { name: 'Deutsch', code: 'DEU' },
+                { name: 'Native Lang', code: 'NAT' },
+                { name: currentAbbr, code: currentAbbr },
               ]"
               optionLabel="name"
               optionValue="code"
@@ -313,7 +324,7 @@ onBeforeUnmount(() => {
           class="flex flex-col gap-3 mb-4 bg-[#444444] border border-gray-400 p-4 rounded-[10px]"
         >
           <p class="font-semibold text-center text-[29px]">
-            {{ selectedLanguage === "GEO" ? word.word : word.meaning }}
+            {{ selectedLanguage === "NAT" ? word.word : word.meaning }}
           </p>
 
           <InputText
@@ -328,7 +339,7 @@ onBeforeUnmount(() => {
           >
             <span v-if="!results[word.id]">
               Correct:
-              {{ selectedLanguage === "GEO" ? word.meaning : word.word }}
+              {{ selectedLanguage === "NAT" ? word.meaning : word.word }}
             </span>
             <span v-else>Correct!</span>
           </p>

@@ -245,7 +245,6 @@ export const useWordsCrud = () => {
     category: WordCategory = WORDS_CATEGORY
   ) => {
     saving.value = true;
-    console.log(category);
 
     try {
       const wordsQuery = buildWordsQuery(category);
@@ -267,7 +266,6 @@ export const useWordsCrud = () => {
       });
     } finally {
       saving.value = false;
-      console.log("ended");
     }
   };
 
