@@ -65,6 +65,14 @@ const userMenuItems = ref([
 ]);
 const notAuthenticatedUserItems = ref([
   {
+    label: DOCUMENTATION_LABEL,
+    icon: "pi pi-book",
+    command: () => router.push(DOCUMENTATION_ROUTE),
+  },
+  {
+    separator: true,
+  },
+  {
     label: SIGN_IN_LABEL,
     icon: "pi pi-sign-in",
     command: async () => {
