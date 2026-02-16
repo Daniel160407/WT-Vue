@@ -12,6 +12,7 @@ import type { AppUser } from "@/type/interfaces";
 import Cookies from "js-cookie";
 import {
   LANGUAGE_ID_COOKIE,
+  LANGUAGES_ROUTE,
   NAME,
   PHOTO_URL,
   UID,
@@ -66,7 +67,7 @@ export function useAuth() {
       Cookies.set(NAME, firebaseUser.displayName || "");
       Cookies.set(PHOTO_URL, firebaseUser.photoURL || "");
 
-      router.push(WORDS_ROUTE);
+      router.push(LANGUAGES_ROUTE);
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Authentication failed";
@@ -80,7 +81,7 @@ export function useAuth() {
       Cookies.remove(UID);
       Cookies.remove(NAME);
       Cookies.remove(PHOTO_URL);
-      router.push("/");
+      router.push(WORDS_ROUTE);
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Logout failed";
     }

@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex justify-center items-center flex-col w-full mt-10">
+  <div class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10">
     <div
       class="flex flex-col bg-[#333333] p-1 md:p-4 rounded-[10px] border border-gray-400"
     >

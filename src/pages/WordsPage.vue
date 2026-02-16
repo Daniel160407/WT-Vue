@@ -169,7 +169,9 @@ watch(words, () => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-start items-center min-h-screen w-full">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-90px)]"
+  >
     <div
       class="mt-6 sm:mt-10 max-w-3xl w-full py-4 sm:py-5 px-3 sm:px-5 bg-[#333333] rounded-2xl shadow-lg"
     >

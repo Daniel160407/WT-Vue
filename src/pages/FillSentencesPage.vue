@@ -244,8 +244,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex justify-center items-center flex-col">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10"
+  >
+    <div
+      class="flex justify-center items-center flex-col p-4 rounded-[10px] bg-[#333333] mb-3"
+    >
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Fill the Sentences
       </h1>
