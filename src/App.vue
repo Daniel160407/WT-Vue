@@ -10,10 +10,15 @@ import {
   AI_ROUTE,
   DICTIONARY_LABEL,
   DICTIONARY_ROUTE,
+  DOCUMENTATION_LABEL,
+  DOCUMENTATION_ROUTE,
   HOME_LABEL,
+  LANGUAGES_LABEL,
   LANGUAGES_ROUTE,
+  LOG_OUT_LABEL,
   SENTENCES_LABEL,
   SENTENCES_ROUTE,
+  SIGN_IN_LABEL,
   STATISTICS_LABEL,
   STATISTICS_ROUTE,
   TESTS_LABEL,
@@ -40,15 +45,20 @@ const avatarSrc = computed(() => {
 
 const userMenuItems = ref([
   {
-    label: "languages",
+    label: LANGUAGES_LABEL,
     icon: "pi pi-language",
     command: () => router.push(LANGUAGES_ROUTE),
+  },
+  {
+    label: DOCUMENTATION_LABEL,
+    icon: "pi pi-book",
+    command: () => router.push(DOCUMENTATION_ROUTE),
   },
   {
     separator: true,
   },
   {
-    label: "Logout",
+    label: LOG_OUT_LABEL,
     icon: "pi pi-sign-out",
     command: async () => {
       await logout();
@@ -58,7 +68,7 @@ const userMenuItems = ref([
 ]);
 const notAuthenticatedUserItems = ref([
   {
-    label: "Sign In",
+    label: SIGN_IN_LABEL,
     icon: "pi pi-sign-in",
     command: async () => {
       await signInWithGoogle();

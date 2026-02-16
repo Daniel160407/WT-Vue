@@ -4,6 +4,7 @@ import {
   ADD_WORDS_ROUTE,
   AI_ROUTE,
   DICTIONARY_ROUTE,
+  DOCUMENTATION_ROUTE,
   LANGUAGES_ROUTE,
   SENTENCES_ROUTE,
   STATISTICS_ROUTE,
@@ -17,6 +18,7 @@ import AIPage from "@/pages/AIPage.vue";
 import StatisticsPage from "@/pages/StatisticsPage.vue";
 import FillSentencesPage from "@/pages/FillSentencesPage.vue";
 import LanguagesPage from "@/pages/LanguagesPage.vue";
+import DocumentationPage from "@/pages/DocumentationPage.vue";
 
 const routes = [
   { path: "/", redirect: WORDS_ROUTE },
@@ -28,6 +30,7 @@ const routes = [
   { path: DICTIONARY_ROUTE, component: DictionaryPage },
   { path: STATISTICS_ROUTE, component: StatisticsPage },
   { path: LANGUAGES_ROUTE, component: LanguagesPage },
+  { path: DOCUMENTATION_ROUTE, component: DocumentationPage },
 ];
 
 const router = createRouter({

@@ -13,6 +13,10 @@ export const SENTENCES_LABEL = "Sentences";
 export const AI = "AI";
 export const DICTIONARY_LABEL = "Dictionary";
 export const STATISTICS_LABEL = "Statistics";
+export const SIGN_IN_LABEL = "Sign In";
+export const LOG_OUT_LABEL = "Logout";
+export const LANGUAGES_LABEL = "My Languages";
+export const DOCUMENTATION_LABEL = "Documentation";
 
 //router
 export const WORDS_ROUTE = "/words";
@@ -23,6 +27,7 @@ export const AI_ROUTE = "/ai";
 export const DICTIONARY_ROUTE = "/dictionary";
 export const STATISTICS_ROUTE = "/statistics";
 export const LANGUAGES_ROUTE = "/languages";
+export const DOCUMENTATION_ROUTE = "/documentation";
 
 //firebase
 export const WORDS = "words";
