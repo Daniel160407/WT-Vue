@@ -29,7 +29,7 @@ import { useGeminiChat } from "@/composables/useGeminiChat";
 const { uid } = useAuth();
 const stats = useStatisticsStore();
 const confirm = useConfirm();
-const { words, level } = storeToRefs(useGlobalStore());
+const { fetching, words, level } = storeToRefs(useGlobalStore());
 const { fetchWords, fetchLevel, fetchDictionaryWords } = useGlobalStore();
 const {
   saving: wordsSaving,
@@ -226,7 +226,7 @@ watch(words, () => {
         </div>
 
         <div
-          v-else-if="words.length === 0"
+          v-else-if="words.length === 0 && !fetching && uid"
           class="flex flex-col items-center justify-center py-16 px-4 text-center bg-[#2a2a2a] rounded-xl border border-dashed border-gray-600"
         >
           <i class="pi pi-box text-5xl text-gray-500 mb-4"></i>

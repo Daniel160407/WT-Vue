@@ -7,7 +7,7 @@ import type {
 } from "@/type/interfaces";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { db } from "../../firebase";
 import {
   ACTIVE,
@@ -33,6 +33,18 @@ export const useGlobalStore = defineStore("globalStore", () => {
   const level = ref<Level | null>(null);
   const languages = ref<Language[]>([]);
 
+  const loadingCount = ref<number>(0);
+  const fetching = computed(() => loadingCount.value > 0);
+
+  const withLoading = async <T>(fn: () => Promise<T>) => {
+    loadingCount.value++;
+    try {
+      return await fn();
+    } finally {
+      loadingCount.value--;
+    }
+  };
+
   const createWordsQuery = (wordType: string, active: boolean) =>
     query(
       collection(db, WORDS),
@@ -49,115 +61,125 @@ export const useGlobalStore = defineStore("globalStore", () => {
     }));
 
   const fetchWords = async (wordType: string) => {
-    try {
-      const snapshot = await getDocs(createWordsQuery(wordType, true));
-      words.value = mapWords(snapshot);
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error appeared",
-        detail: "Words could not be fetched",
-        life: 3000,
-      });
-    }
+    withLoading(async () => {
+      try {
+        const snapshot = await getDocs(createWordsQuery(wordType, true));
+        words.value = mapWords(snapshot);
+      } catch (err) {
+        console.error(err);
+        toast.add({
+          severity: "error",
+          summary: "Error appeared",
+          detail: "Words could not be fetched",
+          life: 3000,
+        });
+      }
+    });
   };
 
   const fetchDictionaryWords = async () => {
-    try {
-      const snapshot = await getDocs(
-        query(
-          collection(db, DICTIONARY),
-          where(USER_ID, "==", uid.value),
-          where(LANGUAGE_ID, "==", languageId.value)
-        )
-      );
+    withLoading(async () => {
+      try {
+        const snapshot = await getDocs(
+          query(
+            collection(db, DICTIONARY),
+            where(USER_ID, "==", uid.value),
+            where(LANGUAGE_ID, "==", languageId.value)
+          )
+        );
 
-      dictionaryWords.value = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<DictionaryWord, "id">),
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error appeared",
-        detail: "Dictionary words could not be fetched",
-        life: 3000,
-      });
-    }
+        dictionaryWords.value = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<DictionaryWord, "id">),
+        }));
+      } catch (err) {
+        console.error(err);
+        toast.add({
+          severity: "error",
+          summary: "Error appeared",
+          detail: "Dictionary words could not be fetched",
+          life: 3000,
+        });
+      }
+    });
   };
 
   const fetchStatistics = async () => {
-    try {
-      const snapshot = await getDocs(
-        query(collection(db, STATISTICS), where(USER_ID, "==", uid.value))
-      );
-      statistics.value = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Statistics, "id">),
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error appeared",
-        detail: "Statistics could not be fetched",
-        life: 3000,
-      });
-    }
+    withLoading(async () => {
+      try {
+        const snapshot = await getDocs(
+          query(collection(db, STATISTICS), where(USER_ID, "==", uid.value))
+        );
+        statistics.value = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Statistics, "id">),
+        }));
+      } catch (err) {
+        console.error(err);
+        toast.add({
+          severity: "error",
+          summary: "Error appeared",
+          detail: "Statistics could not be fetched",
+          life: 3000,
+        });
+      }
+    });
   };
 
   const fetchLevel = async () => {
-    try {
-      const snapshot = await getDocs(
-        query(
-          collection(db, LEVEL),
-          where(USER_ID, "==", uid.value),
-          where(LANGUAGE_ID, "==", languageId.value)
-        )
-      );
+    withLoading(async () => {
+      try {
+        const snapshot = await getDocs(
+          query(
+            collection(db, LEVEL),
+            where(USER_ID, "==", uid.value),
+            where(LANGUAGE_ID, "==", languageId.value)
+          )
+        );
 
-      if (snapshot.empty) {
-        level.value = null;
-        return;
+        if (snapshot.empty) {
+          level.value = null;
+          return;
+        }
+
+        const docSnap = snapshot.docs[0];
+
+        level.value = {
+          id: docSnap!.id,
+          ...(docSnap!.data() as Omit<Level, "id">),
+        };
+      } catch (err) {
+        console.error(err);
+        toast.add({
+          severity: "error",
+          summary: "Error",
+          detail: "Level could not be fetched",
+        });
       }
-
-      const docSnap = snapshot.docs[0];
-
-      level.value = {
-        id: docSnap!.id,
-        ...(docSnap!.data() as Omit<Level, "id">),
-      };
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error",
-        detail: "Level could not be fetched",
-      });
-    }
+    });
   };
 
   const fetchLanguages = async () => {
-    try {
-      const snapshot = await getDocs(
-        query(collection(db, LANGUAGES), where(USER_ID, "==", uid.value))
-      );
+    withLoading(async () => {
+      try {
+        const snapshot = await getDocs(
+          query(collection(db, LANGUAGES), where(USER_ID, "==", uid.value))
+        );
 
-      languages.value = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Language, "id">),
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.add({
-        severity: "error",
-        summary: "Error appeared",
-        detail: "Languages could not be fetched",
-        life: 3000,
-      });
-    }
+        languages.value = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Language, "id">),
+        }));
+      } catch (err) {
+        console.error(err);
+        toast.add({
+          severity: "error",
+          summary: "Error appeared",
+          detail: "Languages could not be fetched",
+          life: 3000,
+        });
+      }
+    });
   };
 
   const setData = async () => {
@@ -171,6 +193,8 @@ export const useGlobalStore = defineStore("globalStore", () => {
   };
 
   return {
+    fetching,
+
     words,
     dictionaryWords,
     statistics,
