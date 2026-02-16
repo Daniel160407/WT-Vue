@@ -24,7 +24,7 @@ const content = {
       },
       {
         header: "Levels & Cycles",
-        text: "Each language has 5 levels. Once you 'Drop' all words in a level, you advance. Completing Level 5 finishes a 'Cycle', which resets your active words but keeps them in your permanent Dictionary.",
+        text: "Each language has 5 levels. As words are “dropped”, they move to the next level. After completing a level, you move on to the next. Completing the 5th level means closing the “cycle” (dropping all words to the next level). By the time you complete the 5th level, you should already know all the words well, so they will be deleted and you will have the opportunity to add new ones. (Don't worry, all the words will be saved in your vocabulary, even after being deleted.)",
       },
       {
         header: "AI Assistant",
@@ -47,7 +47,7 @@ const content = {
       },
       {
         header: "Уровни и Циклы",
-        text: "Для каждого языка предусмотрено 5 уровней. Как только вы завершаете все слова на уровне, вы переходите выше. Завершение 5-го уровня закрывает 'Цикл'.",
+        text: "Каждый язык имеет 5 уровней. По мере «перекидования» слов они переходят на следующий уровень. После завершения уровня вы переходите к следующему. Завершение 5-го уровня означает завершение «цикла» (переход всех слов на следующий уровень). К моменту завершения 5-го уровня вы уже должны хорошо знать все слова, поэтому они будут удалены, и у вас появится возможность добавить новые. (Не волнуйтесь, все слова будут сохранены в вашем словарном запасе, даже после удаления.)",
       },
       {
         header: "ИИ-Помощник",
@@ -71,7 +71,7 @@ const content = {
       },
       {
         header: "დონეები და ციკლები",
-        text: "თითოეულ ენას აქვს 5 დონე. სიტყვების 'დადროპვისას' ისინი გადადიან შემდეგ დონეზე. დონის დასრულების შემდეგ გადადიხართ შემდეგზე. მე-5 დონის დასრულება ნიშნავს 'ციკლის' დახურვას.",
+        text: "თითოეულ ენას აქვს 5 დონე. სიტყვების 'დადროპვისას' ისინი გადადიან შემდეგ დონეზე. დონის დასრულების შემდეგ გადადიხართ შემდეგზე. მე-5 დონის დასრულება ნიშნავს 'ციკლის' დახურვას (ყველა სიტყვის შემდეგ დონეზე 'დადროპვას'). მე-5 დონის დახურვისას თქვენ ყველა სიტყვა უკვე კარგად უნდა იცოდეთ, ამიტომ ისინი წაიშლებიან და გექნებათ ახალი სიტყვების დამატების საშუალება. (არ ინერვიულოთ, ყველა სიტყვა შეინახება თქვენს ლექსიკონში, წაშლის შემდეგაც)",
       },
       {
         header: "AI ასისტენტი",
