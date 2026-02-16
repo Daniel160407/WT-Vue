@@ -88,7 +88,7 @@ export function useAuth() {
   };
 
   onAuthStateChanged(auth, async (firebaseUser) => {
-    if (!languageId.value) {
+    if (!languageId.value && uid.value) {
       router.push(LANGUAGES_ROUTE);
     }
     try {
