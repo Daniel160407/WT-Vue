@@ -370,8 +370,10 @@ watch(waitingForResponse, () => {
                     v-model="AIFormData.quantity"
                     name="quantity"
                     class="w-full"
+                    fluid
                     :min="1"
                     :useGrouping="false"
+                    :inputStyle="{ minWidth: '0' }"
                   />
                   <label>Quantity</label>
                 </FloatLabel>
