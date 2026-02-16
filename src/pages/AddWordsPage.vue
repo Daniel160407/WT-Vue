@@ -29,13 +29,15 @@ import { useAuth } from "@/composables/useAuth";
 import { useAddWordsCrud } from "@/composables/useAddWordsCrud";
 import { useGlobalStore } from "@/stores/GlobalStore";
 
-const { uid } = useAuth();
+const { uid, signInWithGoogle } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { saving, addWord, addAIWord } = useAddWordsCrud();
 const { fetchWords, fetchDictionaryWords } = useGlobalStore();
 
 const parsedAIWords = ref<Word[]>([]);
 const savingIndex = ref<number | null>(null);
+const savingAll = ref(false);
+
 const selectedWordType = ref({ name: "Words", code: "word" });
 const selectedLevel = ref({
   name: Cookies.get(WORD_LEVEL_COOKIE) ?? "A1",
@@ -70,7 +72,11 @@ const resolver = ({ values }: { values: any }) => {
 };
 
 const onFormSubmit = async ({ valid }: { valid: boolean }) => {
-  if (!valid || !uid.value) return;
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
+  if (!valid) return;
 
   const payload: WordForm = {
     ...formData.value,
@@ -86,11 +92,20 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
 };
 
 const onAIFormSubmit = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   const prompt = `Generate ${AIFormData.value.quantity} words in ${AIFormData.value.translateFrom} with translations in ${AIFormData.value.translateTo} of level ${AIFormData.value.level} and about thema: ${AIFormData.value.topic}. If there is a noun, start its article with uppercase letter. Return only a JSON array in this format: [{"word": "word1", "meaning": "translation"}, ...] without any additional text, explanations, or markdown formatting.`;
   await sendMessage(prompt, false);
 };
 
 const onAIWordSave = async (word: Word, index: number) => {
+  if (!uid.value) {
+    signInWithGoogle();
+
+    return;
+  }
   savingIndex.value = index;
   const basePayload = {
     word: word.word.trim(),
@@ -107,13 +122,50 @@ const onAIWordSave = async (word: Word, index: number) => {
   await fetchDictionaryWords();
 
   parsedAIWords.value.splice(index, 1);
+  savingIndex.value = null;
+};
+
+const onSaveAllAIWords = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
+  if (!parsedAIWords.value.length) return;
+
+  savingAll.value = true;
+  try {
+    for (const word of parsedAIWords.value) {
+      const basePayload = {
+        word: word.word.trim(),
+        meaning: word.meaning.trim(),
+        example: "",
+        level: selectedLevel.value.code,
+        word_type: WORDS_CATEGORY,
+        active: true,
+        user_id: uid.value,
+        language_id: Cookies.get("language_id") ?? "",
+      };
+      await addAIWord(basePayload);
+    }
+
+    await fetchWords(formData.value.word_type);
+    await fetchDictionaryWords();
+    parsedAIWords.value = [];
+  } catch (error) {
+    console.error("Save all error:", error);
+  } finally {
+    savingAll.value = false;
+  }
 };
 
 const handleAIResponse = () => {
   for (const message of messages.value) {
     if (message.sender === GEMINI) {
       try {
-        parsedAIWords.value = JSON.parse(message.payload);
+        const cleanedPayload = message.payload
+          .replace(/```json|```/g, "")
+          .trim();
+        parsedAIWords.value = JSON.parse(cleanedPayload);
       } catch {
         parsedAIWords.value = [];
       }
@@ -122,6 +174,10 @@ const handleAIResponse = () => {
 };
 
 const generateExamples = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   const prompt = `Generate 3 example sentences in ${formData.value.level}, where the word: ${formData.value.word} is used, one per line, without any extra text`;
   await sendMessage(prompt, false);
   const examples = messages.value[messages.value.length - 1]?.payload;
@@ -139,9 +195,15 @@ watch(waitingForResponse, () => {
 </script>
 
 <template>
-  <div class="flex justify-center items-center mt-10">
-    <div class="w-125 bg-[#333333] p-4 rounded-[10px]">
-      <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-4">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10 px-4"
+  >
+    <div
+      class="w-full max-w-2xl bg-[#333333] p-4 sm:p-6 rounded-[10px] shadow-lg"
+    >
+      <h1
+        class="text-[#ffc107] text-2xl sm:text-[30px] font-bold text-center mb-4"
+      >
         Add New Words
       </h1>
 
@@ -212,9 +274,10 @@ watch(waitingForResponse, () => {
                 </FloatLabel>
                 <Button
                   label="Generate Examples"
+                  icon="pi pi-sparkles"
                   :loading="waitingForResponse"
                   severity="warn"
-                  class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
+                  class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full mt-2"
                   @click="generateExamples"
                 />
               </div>
@@ -246,16 +309,18 @@ watch(waitingForResponse, () => {
                 </FloatLabel>
               </div>
 
-              <Button type="submit" label="Save" :loading="saving" />
+              <Button
+                type="submit"
+                label="Save Word"
+                :loading="saving"
+                class="w-full"
+              />
             </Form>
           </TabPanel>
 
           <TabPanel value="1">
             <Form
               :formData
-              :resolver
-              :validateOnValueUpdate="false"
-              :validateOnBlur="true"
               @submit="onAIFormSubmit"
               class="flex flex-col gap-5"
             >
@@ -266,29 +331,26 @@ watch(waitingForResponse, () => {
                     name="topic"
                     class="w-full"
                   />
-                  <label>Topic</label>
+                  <label>Topic (e.g., Cooking, Travel)</label>
                 </FloatLabel>
               </div>
 
-              <div>
-                <FloatLabel variant="on">
+              <div class="flex flex-col sm:flex-row gap-4">
+                <FloatLabel variant="on" class="flex-1">
                   <InputText
                     v-model="AIFormData.translateFrom"
                     name="translate_from"
                     class="w-full"
                   />
-                  <label>Translate from</label>
+                  <label>Translate from (Language)</label>
                 </FloatLabel>
-              </div>
-
-              <div>
-                <FloatLabel variant="on">
+                <FloatLabel variant="on" class="flex-1">
                   <InputText
                     v-model="AIFormData.translateTo"
                     name="translate_to"
                     class="w-full"
                   />
-                  <label>Translate to</label>
+                  <label>Translate to (Language)</label>
                 </FloatLabel>
               </div>
 
@@ -317,33 +379,51 @@ watch(waitingForResponse, () => {
 
               <Button
                 type="submit"
-                label="Generate"
-                class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-l!"
+                label="Generate Words with AI"
+                icon="pi pi-bolt"
+                class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full"
                 :loading="waitingForResponse"
               />
             </Form>
 
-            <div class="mt-6 space-y-3">
+            <div v-if="parsedAIWords.length > 0" class="mt-8 space-y-4">
+              <div
+                class="flex items-center justify-between border-b border-gray-600 pb-2"
+              >
+                <span class="text-gray-300 font-semibold"
+                  >{{ parsedAIWords.length }} words generated</span
+                >
+                <Button
+                  label="Save All"
+                  icon="pi pi-save"
+                  severity="success"
+                  size="small"
+                  :loading="savingAll"
+                  @click="onSaveAllAIWords"
+                />
+              </div>
+
               <div
                 v-for="(word, index) in parsedAIWords"
                 :key="index"
-                class="flex items-center gap-4 rounded-lg bg-[#2f2f2f] p-4 shadow-sm hover:shadow-md transition"
+                class="flex flex-col sm:flex-row items-center gap-3 rounded-lg bg-[#2f2f2f] p-3 shadow-sm"
               >
                 <InputText
                   v-model="word.word"
                   placeholder="Word"
-                  class="w-1/3"
+                  class="w-full sm:w-1/3"
                 />
                 <InputText
                   v-model="word.meaning"
                   placeholder="Meaning"
-                  class="w-1/3"
+                  class="w-full sm:w-1/3"
                 />
                 <Button
                   label="Save"
                   icon="pi pi-check"
-                  class="ml-auto"
-                  :loading="saving"
+                  class="w-full sm:w-auto ml-auto"
+                  :loading="saving && index === savingIndex"
+                  :disabled="savingAll"
                   @click="onAIWordSave(word, index)"
                 />
               </div>

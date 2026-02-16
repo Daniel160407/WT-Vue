@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import type { Word } from "@/type/interfaces";
-import { WORD_LEVEL_OPTIONS, WORD_TYPE_OPTIONS } from "@/composables/constants";
+import {
+  ADD_WORDS_ROUTE,
+  WORD_LEVEL_OPTIONS,
+  WORD_TYPE_OPTIONS,
+} from "@/composables/constants";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -169,7 +173,9 @@ watch(words, () => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-start items-center min-h-screen w-full">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-90px)]"
+  >
     <div
       class="mt-6 sm:mt-10 max-w-3xl w-full py-4 sm:py-5 px-3 sm:px-5 bg-[#333333] rounded-2xl shadow-lg"
     >
@@ -217,6 +223,19 @@ watch(words, () => {
             fill="transparent"
             animationDuration=".5s"
           />
+        </div>
+
+        <div
+          v-else-if="words.length === 0"
+          class="flex flex-col items-center justify-center py-16 px-4 text-center bg-[#2a2a2a] rounded-xl border border-dashed border-gray-600"
+        >
+          <i class="pi pi-box text-5xl text-gray-500 mb-4"></i>
+          <h3 class="text-xl font-semibold text-gray-200">No words found</h3>
+          <p class="text-gray-400 mt-2 max-w-xs">
+            There are no words of this category.
+            <a :href="ADD_WORDS_ROUTE" class="underline text-yellow-400">Add</a>
+            some words to get started!
+          </p>
         </div>
 
         <div v-else class="flex flex-col gap-4">
@@ -292,7 +311,7 @@ watch(words, () => {
             label="Drop"
             severity="warn"
             :loading="isSaving"
-            :disabled="isSaving"
+            :disabled="isSaving || words.length === 0"
             class="bg-[#ffc107]! border-[#ffc107]! text-black! w-full text-xl!"
             @click="handleDropWords"
           />

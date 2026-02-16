@@ -80,6 +80,12 @@ export const useAddWordsCrud = () => {
       await globalStore.fetchStatistics();
 
       await processAdvancements();
+      toast.add({
+        severity: "success",
+        summary: "Word added",
+        detail: `Word ${word.word} with translation: ${word.meaning} was added successfully`,
+        life: 3000,
+      });
     } catch (error) {
       console.error(error);
       toast.add({

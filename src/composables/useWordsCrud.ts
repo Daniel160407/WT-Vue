@@ -244,15 +244,29 @@ export const useWordsCrud = () => {
   const fetchTranslationsPageWords = async (
     category: WordCategory = WORDS_CATEGORY
   ) => {
-    const wordsQuery = buildWordsQuery(category);
-    if (!wordsQuery) return;
+    saving.value = true;
 
-    const snapshot = await getDocs(wordsQuery);
+    try {
+      const wordsQuery = buildWordsQuery(category);
+      if (!wordsQuery) return;
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Word, "id">),
-    }));
+      const snapshot = await getDocs(wordsQuery);
+
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Word, "id">),
+      }));
+    } catch (err) {
+      console.error(err);
+      toast.add({
+        severity: "error",
+        summary: "Error appeared",
+        detail: "Could not fetch words",
+        life: 3000,
+      });
+    } finally {
+      saving.value = false;
+    }
   };
 
   return {

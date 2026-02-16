@@ -16,7 +16,7 @@ const content = {
     sections: [
       {
         header: "🚀 Quick Start Guide",
-        text: "To begin your journey, you first need to define which language you want to learn. Navigate to the Languages page, click 'Add New Language', and select your target. Once a language is added, the 'Add Word' and 'Exercises' features will become available for that specific profile.",
+        text: "To begin your journey, you first need to Sign In and define which language you want to learn. Navigate to the Languages page, click 'Add New Language', and select your target. Once a language is added, the 'Add Word' and 'Exercises' features will become available for that specific profile.",
       },
       {
         header: "Getting Started",
@@ -39,7 +39,7 @@ const content = {
     sections: [
       {
         header: "🚀 Быстрый старт",
-        text: "Чтобы начать обучение, вам сначала нужно выбрать язык. Перейдите в раздел 'Языки', нажмите 'Добавить новый язык' и выберите цель. После добавления языка функции 'Добавить слово' и 'Упражнения' станут доступны для этого профиля.",
+        text: "Чтобы начать обучение, вам сначала нужно авторизоваться а затем выбрать язык. Перейдите в раздел 'Языки' в профиле, нажмите 'Добавить новый язык' и выберите цель. После добавления языка функции 'Добавить слово' и 'Упражнения' станут доступны для этого профиля.",
       },
       {
         header: "Начало работы",
@@ -63,7 +63,7 @@ const content = {
     sections: [
       {
         header: "🚀 სწრაფი დაწყების გზამკვლევი",
-        text: "სწავლის დასაწყებად, პირველ რიგში უნდა განსაზღვროთ, რომელი ენის შესწავლა გსურთ. გადადით 'ენების' გვერდზე, დააჭირეთ 'ახალი ენის დამატებას' და აირჩიეთ სასურველი ენა. ენის დამატების შემდეგ, სიტყვების დამატებისა და სავარჯიშოების ფუნქციები გააქტიურდება.",
+        text: "სწავლის დასაწყებად, პირველ რიგში უნდა შეხვიდეთ თქვენს აქაუნთში, შემდეგ უნდა განსაზღვროთ, რომელი ენის შესწავლა გსურთ. გადადით 'ენების' გვერდზე, დააჭირეთ 'ახალი ენის დამატებას' და აირჩიეთ სასურველი ენა. ენის დამატების შემდეგ, სიტყვების დამატებისა და სავარჯიშოების ფუნქციები გააქტიურდება.",
       },
       {
         header: "დაწყება",

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  ADD_WORDS_ROUTE,
   ARTICLES,
   CAPITALS,
   DICTIONARY_CATEGORY,
@@ -9,12 +10,7 @@ import {
 import { Button, FloatLabel, InputText, Select } from "primevue";
 import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuth } from "@/composables/useAuth";
-import type {
-  DictionaryWord,
-  LanguageVersion,
-  Word,
-  WordCategory,
-} from "@/type/interfaces";
+import type { DictionaryWord, Word, WordCategory } from "@/type/interfaces";
 import { useStatisticsStore } from "@/stores/useStatisticsStore";
 import { useToast } from "primevue/usetoast";
 import { useGlobalStore } from "@/stores/GlobalStore";
@@ -28,7 +24,7 @@ const toast = useToast();
 const globalStore = useGlobalStore();
 const { fetchTranslationsPageWords } = useWordsCrud();
 const { fetchStatistics } = globalStore;
-const { statistics, dictionaryWords } = storeToRefs(globalStore);
+const { languages, statistics, dictionaryWords } = storeToRefs(globalStore);
 
 const exerciseStore = useExerciseStore();
 const {
@@ -42,7 +38,22 @@ const {
 
 const { saveTranslationExercise } = exerciseStore;
 
-const selectedLanguage = ref<LanguageVersion>("DEU");
+const currentAbbr = computed(() => {
+  const lang = languages.value.find((l) => l.id === languageId.value);
+  return lang?.abbreviation.toUpperCase() ?? "Foreign Language";
+});
+
+const selectedLanguage = ref<string>(currentAbbr.value);
+
+watch(currentAbbr, (newVal) => {
+  if (
+    selectedLanguage.value === "Foreign Language" ||
+    !selectedLanguage.value
+  ) {
+    selectedLanguage.value = newVal;
+  }
+});
+
 const wordCategory = ref<{ name: string; code: WordCategory }>({
   name: "Words",
   code: WORDS_CATEGORY,
@@ -52,6 +63,7 @@ const words = ref<Array<Word | DictionaryWord>>([]);
 const translations = ref<Record<string, string>>({});
 const results = ref<Record<string, boolean>>({});
 
+const loading = ref(false);
 const showCapitals = ref(false);
 const selectedCapital = ref<string>("A");
 
@@ -124,10 +136,14 @@ const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
       return;
     }
 
-    words.value = shuffleArray((await fetchTranslationsPageWords()) ?? []);
+    words.value = shuffleArray(
+      (await fetchTranslationsPageWords(category)) ?? []
+    );
     resetInputs();
   } catch (error) {
     console.error("fetchWords error:", error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -137,7 +153,7 @@ const checkAnswers = async () => {
   words.value.forEach((word) => {
     const userInput = translations.value[word.id]?.trim().toLowerCase();
     const correctAnswer =
-      selectedLanguage.value === "GEO" ? word.meaning : word.word;
+      selectedLanguage.value === "NAT" ? word.meaning : word.word;
 
     results.value[word.id] =
       userInput === (correctAnswer || "").trim().toLowerCase();
@@ -193,12 +209,13 @@ watch(
 );
 
 onMounted(() => {
+  loading.value = true;
   if (translationWords.value.length) {
     words.value = [...translationWords.value];
     translations.value = { ...translationUserInputs.value };
     results.value = { ...translationResults.value };
 
-    selectedLanguage.value = translationLanguage.value as any;
+    selectedLanguage.value = translationLanguage.value || currentAbbr.value;
 
     if (translationCategory.value) {
       wordCategory.value = translationCategory.value;
@@ -223,7 +240,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex justify-center items-center flex-col w-full mt-10">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10"
+  >
     <div
       class="flex flex-col bg-[#333333] p-1 md:p-4 rounded-[10px] border border-gray-400"
     >
@@ -233,8 +252,8 @@ onBeforeUnmount(() => {
             <Select
               v-model="selectedLanguage"
               :options="[
-                { name: 'Georgian', code: 'GEO' },
-                { name: 'Deutsch', code: 'DEU' },
+                { name: 'Native Lang', code: 'NAT' },
+                { name: currentAbbr, code: currentAbbr },
               ]"
               optionLabel="name"
               optionValue="code"
@@ -267,6 +286,19 @@ onBeforeUnmount(() => {
       </div>
 
       <div
+        v-if="words.length === 0 && !loading"
+        class="flex flex-col items-center justify-center py-16 px-4 mt-4 text-center bg-[#2a2a2a] rounded-xl border border-dashed border-gray-600 w-full"
+      >
+        <i class="pi pi-box text-5xl text-gray-500 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-200">No words found</h3>
+        <p class="text-gray-400 mt-2 text-wrap">
+          There are no words of this category.
+          <a :href="ADD_WORDS_ROUTE" class="underline text-yellow-400">Add</a>
+          some words!
+        </p>
+      </div>
+
+      <div
         v-if="hasChecked"
         class="text-center mt-4 text-xl font-bold flex justify-between items-center"
         :class="percentage === 100 ? 'text-green-400' : 'text-yellow-400'"
@@ -291,7 +323,7 @@ onBeforeUnmount(() => {
           class="flex flex-col gap-3 mb-4 bg-[#444444] border border-gray-400 p-4 rounded-[10px]"
         >
           <p class="font-semibold text-center text-[29px]">
-            {{ selectedLanguage === "GEO" ? word.word : word.meaning }}
+            {{ selectedLanguage === "NAT" ? word.word : word.meaning }}
           </p>
 
           <InputText
@@ -306,7 +338,7 @@ onBeforeUnmount(() => {
           >
             <span v-if="!results[word.id]">
               Correct:
-              {{ selectedLanguage === "GEO" ? word.meaning : word.word }}
+              {{ selectedLanguage === "NAT" ? word.meaning : word.word }}
             </span>
             <span v-else>Correct!</span>
           </p>

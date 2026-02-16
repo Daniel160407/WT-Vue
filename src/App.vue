@@ -60,10 +60,7 @@ const userMenuItems = ref([
   {
     label: LOG_OUT_LABEL,
     icon: "pi pi-sign-out",
-    command: async () => {
-      await logout();
-      router.push("/auth");
-    },
+    command: async () => await logout(),
   },
 ]);
 const notAuthenticatedUserItems = ref([

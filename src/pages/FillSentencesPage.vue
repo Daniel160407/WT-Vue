@@ -23,7 +23,9 @@ import {
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { useExerciseStore } from "@/stores/useExerciseStore";
+import { useAuth } from "@/composables/useAuth";
 
+const { uid, signInWithGoogle } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { words } = storeToRefs(useGlobalStore());
 const exerciseStore = useExerciseStore();
@@ -50,6 +52,10 @@ const formData = ref({
 });
 
 const generateSentences = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   areAnswersChecked.value = false;
 
   const prompt = formData.value.useExistingWords
@@ -244,8 +250,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex justify-center items-center flex-col">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10"
+  >
+    <div
+      class="flex justify-center items-center flex-col p-4 rounded-[10px] bg-[#333333] mb-3"
+    >
       <h1 class="text-[#ffc107] text-[30px] font-bold text-center mb-6">
         Fill the Sentences
       </h1>
@@ -318,6 +328,7 @@ onBeforeUnmount(() => {
         <Button type="submit" label="Generate" :loading="waitingForResponse" />
       </Form>
     </div>
+
     <div v-if="editedSentences.length && !waitingForResponse">
       <div class="mb-3 bg-[#333333] p-4 rounded-2xl border border-[#646b79]">
         <div
