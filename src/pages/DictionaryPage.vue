@@ -4,7 +4,7 @@ import { ref, computed } from "vue";
 import type { DictionaryWord } from "@/type/interfaces";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { storeToRefs } from "pinia";
-import { ARTICLES } from "@/composables/constants";
+import { ADD_WORDS_ROUTE, ARTICLES } from "@/composables/constants";
 
 const { dictionaryWords } = storeToRefs(useGlobalStore());
 
@@ -78,6 +78,19 @@ const groupedWords = computed(() => {
         </FloatLabel>
         <p class="text-sm text-gray-400 mt-2">
           Total words in dictionary: {{ dictionaryWords.length }}
+        </p>
+      </div>
+
+      <div
+        v-if="dictionaryWords.length === 0"
+        class="flex flex-col items-center justify-center py-16 px-4 text-center bg-[#2a2a2a] rounded-xl border border-dashed border-gray-600"
+      >
+        <i class="pi pi-box text-5xl text-gray-500 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-200">No words found</h3>
+        <p class="text-gray-400 mt-2 max-w-xs">
+          There are no words in your dictionary.
+          <a :href="ADD_WORDS_ROUTE" class="underline text-yellow-400">Add</a>
+          some words to get started!
         </p>
       </div>
 

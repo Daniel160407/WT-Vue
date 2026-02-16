@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  ADD_WORDS_ROUTE,
   ARTICLES,
   CAPITALS,
   DICTIONARY_CATEGORY,
@@ -26,7 +27,7 @@ const { uid, languageId } = useAuth();
 const stats = useStatisticsStore();
 const toast = useToast();
 const globalStore = useGlobalStore();
-const { fetchTranslationsPageWords } = useWordsCrud();
+const { saving, fetchTranslationsPageWords } = useWordsCrud();
 const { fetchStatistics } = globalStore;
 const { statistics, dictionaryWords } = storeToRefs(globalStore);
 
@@ -52,6 +53,7 @@ const words = ref<Array<Word | DictionaryWord>>([]);
 const translations = ref<Record<string, string>>({});
 const results = ref<Record<string, boolean>>({});
 
+const loading = ref(false);
 const showCapitals = ref(false);
 const selectedCapital = ref<string>("A");
 
@@ -124,10 +126,14 @@ const fetchWords = async (category: WordCategory = WORDS_CATEGORY) => {
       return;
     }
 
-    words.value = shuffleArray((await fetchTranslationsPageWords()) ?? []);
+    words.value = shuffleArray(
+      (await fetchTranslationsPageWords(category)) ?? []
+    );
     resetInputs();
   } catch (error) {
     console.error("fetchWords error:", error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -193,6 +199,7 @@ watch(
 );
 
 onMounted(() => {
+  loading.value = true;
   if (translationWords.value.length) {
     words.value = [...translationWords.value];
     translations.value = { ...translationUserInputs.value };
@@ -223,7 +230,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10">
+  <div
+    class="flex flex-col justify-start items-center w-full min-h-[calc(100vh-130px)] mt-10"
+  >
     <div
       class="flex flex-col bg-[#333333] p-1 md:p-4 rounded-[10px] border border-gray-400"
     >
@@ -264,6 +273,19 @@ onBeforeUnmount(() => {
             <label>Capital</label>
           </FloatLabel>
         </div>
+      </div>
+
+      <div
+        v-if="words.length === 0 && !loading"
+        class="flex flex-col items-center justify-center py-16 px-4 mt-4 text-center bg-[#2a2a2a] rounded-xl border border-dashed border-gray-600 w-full"
+      >
+        <i class="pi pi-box text-5xl text-gray-500 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-200">No words found</h3>
+        <p class="text-gray-400 mt-2 text-wrap">
+          There are no words of this category.
+          <a :href="ADD_WORDS_ROUTE" class="underline text-yellow-400">Add</a>
+          some words!
+        </p>
       </div>
 
       <div

@@ -322,6 +322,7 @@ onBeforeUnmount(() => {
         <Button type="submit" label="Generate" :loading="waitingForResponse" />
       </Form>
     </div>
+
     <div v-if="editedSentences.length && !waitingForResponse">
       <div class="mb-3 bg-[#333333] p-4 rounded-2xl border border-[#646b79]">
         <div
