@@ -23,7 +23,9 @@ import {
 import { storeToRefs } from "pinia";
 import { useGlobalStore } from "@/stores/GlobalStore";
 import { useExerciseStore } from "@/stores/useExerciseStore";
+import { useAuth } from "@/composables/useAuth";
 
+const { uid, signInWithGoogle } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { words } = storeToRefs(useGlobalStore());
 const exerciseStore = useExerciseStore();
@@ -50,6 +52,10 @@ const formData = ref({
 });
 
 const generateSentences = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   areAnswersChecked.value = false;
 
   const prompt = formData.value.useExistingWords

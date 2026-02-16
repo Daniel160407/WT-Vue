@@ -29,7 +29,7 @@ import { useAuth } from "@/composables/useAuth";
 import { useAddWordsCrud } from "@/composables/useAddWordsCrud";
 import { useGlobalStore } from "@/stores/GlobalStore";
 
-const { uid } = useAuth();
+const { uid, signInWithGoogle } = useAuth();
 const { messages, waitingForResponse, sendMessage } = useGeminiChat();
 const { saving, addWord, addAIWord } = useAddWordsCrud();
 const { fetchWords, fetchDictionaryWords } = useGlobalStore();
@@ -72,7 +72,11 @@ const resolver = ({ values }: { values: any }) => {
 };
 
 const onFormSubmit = async ({ valid }: { valid: boolean }) => {
-  if (!valid || !uid.value) return;
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
+  if (!valid) return;
 
   const payload: WordForm = {
     ...formData.value,
@@ -88,11 +92,20 @@ const onFormSubmit = async ({ valid }: { valid: boolean }) => {
 };
 
 const onAIFormSubmit = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   const prompt = `Generate ${AIFormData.value.quantity} words in ${AIFormData.value.translateFrom} with translations in ${AIFormData.value.translateTo} of level ${AIFormData.value.level} and about thema: ${AIFormData.value.topic}. If there is a noun, start its article with uppercase letter. Return only a JSON array in this format: [{"word": "word1", "meaning": "translation"}, ...] without any additional text, explanations, or markdown formatting.`;
   await sendMessage(prompt, false);
 };
 
 const onAIWordSave = async (word: Word, index: number) => {
+  if (!uid.value) {
+    signInWithGoogle();
+
+    return;
+  }
   savingIndex.value = index;
   const basePayload = {
     word: word.word.trim(),
@@ -113,7 +126,11 @@ const onAIWordSave = async (word: Word, index: number) => {
 };
 
 const onSaveAllAIWords = async () => {
-  if (!parsedAIWords.value.length || !uid.value) return;
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
+  if (!parsedAIWords.value.length) return;
 
   savingAll.value = true;
   try {
@@ -157,6 +174,10 @@ const handleAIResponse = () => {
 };
 
 const generateExamples = async () => {
+  if (!uid.value) {
+    signInWithGoogle();
+    return;
+  }
   const prompt = `Generate 3 example sentences in ${formData.value.level}, where the word: ${formData.value.word} is used, one per line, without any extra text`;
   await sendMessage(prompt, false);
   const examples = messages.value[messages.value.length - 1]?.payload;

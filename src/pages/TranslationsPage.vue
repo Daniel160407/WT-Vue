@@ -45,7 +45,6 @@ const currentAbbr = computed(() => {
 
 const selectedLanguage = ref<string>(currentAbbr.value);
 
-// Watcher to sync the selection once data loads
 watch(currentAbbr, (newVal) => {
   if (
     selectedLanguage.value === "Foreign Language" ||
