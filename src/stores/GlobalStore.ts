@@ -183,13 +183,6 @@ export const useGlobalStore = defineStore("globalStore", () => {
   };
 
   const setData = async () => {
-    if (!uid.value || !languageId.value) {
-      console.warn(
-        "setData skipped: Missing auth credentials or language selection."
-      );
-      return;
-    }
-
     await Promise.allSettled([
       fetchWords("word"),
       fetchDictionaryWords(),

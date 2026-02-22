@@ -31,7 +31,7 @@ import { useAuth } from "./composables/useAuth";
 
 const router = useRouter();
 const { setData } = useGlobalStore();
-const { photoURL, uid, languageId, logout, signInWithGoogle } = useAuth();
+const { photoURL, uid, logout, signInWithGoogle } = useAuth();
 
 const userMenu = ref();
 const toggleUserMenu = (event: Event) => {
@@ -126,11 +126,9 @@ const items = ref([
 ]);
 
 watch(
-  [uid, languageId],
-  ([newUid, newLangId]) => {
-    if (newUid && newLangId) {
-      setData();
-    }
+  () => uid.value,
+  (newUid) => {
+    if (newUid) setData();
   },
   { immediate: true }
 );
