@@ -11,6 +11,7 @@ import router from "./router";
 import type { AppUser } from "@/type/interfaces";
 import Cookies from "js-cookie";
 import {
+  COOKIE_EXPIRY_DAYS,
   LANGUAGE_ID_COOKIE,
   LANGUAGES_ROUTE,
   NAME,
@@ -19,6 +20,8 @@ import {
   USERS,
   WORDS_ROUTE,
 } from "./constants";
+
+const cookieOptions = { expires: COOKIE_EXPIRY_DAYS };
 
 const user = ref<FirebaseUser | null>(null);
 const loading = ref(true);
@@ -30,7 +33,7 @@ const photoURL = computed(() => user.value?.photoURL ?? null);
 const displayName = computed(() => user.value?.displayName ?? null);
 
 const setLanguageId = (id: string) => {
-  Cookies.set(LANGUAGE_ID_COOKIE, id);
+  Cookies.set(LANGUAGE_ID_COOKIE, id, cookieOptions);
   languageId.value = id;
 };
 
@@ -63,9 +66,9 @@ export function useAuth() {
         merge: true,
       });
 
-      Cookies.set(UID, firebaseUser.uid);
-      Cookies.set(NAME, firebaseUser.displayName || "");
-      Cookies.set(PHOTO_URL, firebaseUser.photoURL || "");
+      Cookies.set(UID, firebaseUser.uid, cookieOptions);
+      Cookies.set(NAME, firebaseUser.displayName || "", cookieOptions);
+      Cookies.set(PHOTO_URL, firebaseUser.photoURL || "", cookieOptions);
 
       router.push(LANGUAGES_ROUTE);
     } catch (err) {

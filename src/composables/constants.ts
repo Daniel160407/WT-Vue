@@ -134,7 +134,8 @@ export const IRREGULAR_VERBS_CATEGORY = "irregular";
 export const DROPPED_WORDS_CATEGORY = "dropped";
 export const DICTIONARY_CATEGORY = "dictionary";
 
-//cookies
+//cookies (use expires so cookies persist after browser close, e.g. Safari iOS)
+export const COOKIE_EXPIRY_DAYS = 365;
 export const UID = "uid";
 export const NAME = "name";
 export const PHOTO_URL = "photoURL";

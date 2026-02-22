@@ -6,6 +6,7 @@ import { computed, ref } from "vue";
 import Cookies from "js-cookie";
 import router from "@/composables/router";
 import {
+  COOKIE_EXPIRY_DAYS,
   LANGUAGE_ID_COOKIE,
   LANGUAGE_OPTIONS,
   WORDS_ROUTE,
@@ -47,7 +48,7 @@ const statsMap = computed(() => {
 });
 
 const handleLanguageClick = async (language: Language) => {
-  Cookies.set(LANGUAGE_ID_COOKIE, language.id);
+  Cookies.set(LANGUAGE_ID_COOKIE, language.id, { expires: COOKIE_EXPIRY_DAYS });
   setLanguageId(language.id);
 
   await setData();
