@@ -91,6 +91,7 @@ const hasChecked = computed(() => {
 });
 
 const handleReset = () => {
+  words.value = shuffleArray(words.value);
   resetInputs();
 };
 
